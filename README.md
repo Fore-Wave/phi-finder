@@ -1,4 +1,4 @@
-# φ-Finder: Cross-Scale Golden Ratio Analysis Tool
+# φ-Finder: Cross-Scale Golden Ratio Analysis Tool [Version 4.1]
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Live Demo](https://img.shields.io/badge/Demo-Live-blue.svg)](https://phi-finder.netlify.app/)
@@ -10,7 +10,7 @@
 
 ## 🌟 Live Tool
 
-**👉 [phi-finder.netlify.app](https://phi-finder.netlify.app/)**
+**👉 [https://phi-finder-v41.netlify.app/)**
 
 Open-source web application for analyzing φ-patterns across:
 - 🌌 LIGO Gravitational Waves
