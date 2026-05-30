@@ -48,7 +48,7 @@ Part of the **Minimum Viable Recursion Protocol (MVRP)** research project testin
 ## 🚀 Quick Start
 
 ### Option 1: Use Live Tool
-Visit [phi-finder.netlify.app](https://phi-finder.netlify.app/)
+Visit [phi-finder.netlify.app](https://phi-finder-v41.netlify.app/)
 
 ### Option 2: Run Locally
 ```bash
@@ -178,7 +178,7 @@ This project demonstrates **distributed intelligence** research methodology:
 ## 🌍 Links & Resources
 
 ### Primary
-- **Live Tool:** [phi-finder.netlify.app](https://phi-finder.netlify.app/)
+- **Live Tool:** [phi-finder.netlify.app]((https://phi-finder-v41.netlify.app/))
 - **Zenodo Archive:** [DOI 10.5281/zenodo.18167536](https://zenodo.org/records/18079209)
 - **GitHub Repository:** [github.com/Fore-Wave/phi-finder](https://github.com/Fore-Wave/phi-finder)
 
