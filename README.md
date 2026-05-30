@@ -48,7 +48,8 @@ Part of the **Minimum Viable Recursion Protocol (MVRP)** research project testin
 ## 🚀 Quick Start
 
 ### Option 1: Use Live Tool
-Visit [phi-finder.netlify.app](https://phi-finder-v41.netlify.app/)
+Visit [phi-finder.netlify.app]
+**👉 [(https://phi-finder-v41.netlify.app/)]**
 
 ### Option 2: Run Locally
 ```bash
