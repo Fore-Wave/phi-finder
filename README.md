@@ -10,7 +10,7 @@
 
 ## 🌟 Live Tool
 
-**👉 [https://phi-finder-v41.netlify.app/)**
+**👉 [(https://phi-finder-v41.netlify.app/)]**
 
 Open-source web application for analyzing φ-patterns across:
 - 🌌 LIGO Gravitational Waves
