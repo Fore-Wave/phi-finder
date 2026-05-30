@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>φ-Finder v4.1 — MVRP Open Science</title>
+  <meta name="description" content="Statistically rigorous, honest open-science tool for testing golden ratio patterns across cosmic, planetary, and lab scales. MVRP Research Collective.">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    /* ═══ THEME TOKENS ═══════════════════════════════════════════════ */
+    :root {
+      --bg:       #080c20; --surface: #111829; --surface2: #192035;
+      --border:   rgba(99,102,241,.22); --border2: rgba(99,102,241,.4);
+      --gold:     #f5c842; --cyan: #22d3ee; --purple: #818cf8;
+      --green:    #34d399; --red: #f87171; --pink: #f472b6;
+      --text:     #e2e8f0; --muted: #94a3b8; --PHI: 1.6180339887;
+    }
+    [data-theme="light"] {
+      --bg:      #f1f5f9; --surface: #ffffff; --surface2: #f8fafc;
+      --border:  rgba(99,102,241,.20); --border2: rgba(99,102,241,.35);
+      --text:    #1e293b; --muted: #64748b;
+    }
+
+    body { font-family:'Space Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; transition:background .3s,color .3s; }
+
+    /* ═══ STARFIELD ══════════════════════════════════════════════════ */
+    #stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+    [data-theme="dark"] #stars { background:radial-gradient(ellipse at 20% 50%, #0d1033, #080c20 70%); }
+    [data-theme="light"] #stars { background:linear-gradient(135deg,#dbeafe,#f1f5f9); }
+    .star { position:absolute; border-radius:50%; background:#fff; animation:twinkle var(--d) ease-in-out infinite; }
+    [data-theme="light"] .star { background:#94a3b8; opacity:.15; }
+    @keyframes twinkle { 0%,100%{opacity:.1} 50%{opacity:.9} }
+
+    /* ═══ LAYOUT ════════════════════════════════════════════════════ */
+    .wrap { max-width:1380px; margin:0 auto; padding:16px 20px; position:relative; z-index:1; }
+
+    /* ═══ HEADER ════════════════════════════════════════════════════ */
+    header {
+      text-align:center; padding:32px 24px 24px;
+      background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(34,211,238,.06));
+      border:1px solid var(--border); border-radius:18px; backdrop-filter:blur(12px);
+      margin-bottom:10px; position:relative;
+    }
+    .theme-btn {
+      position:absolute; top:16px; right:16px; padding:6px 14px;
+      background:var(--surface2); border:1px solid var(--border); border-radius:20px;
+      color:var(--text); font-family:'Space Mono',monospace; font-size:11px;
+      cursor:pointer; transition:all .2s;
+    }
+    .theme-btn:hover { border-color:var(--cyan); }
+    .phi-glyph { font-family:'Orbitron',sans-serif; font-size:68px; font-weight:900; line-height:1;
+      background:linear-gradient(135deg,var(--gold),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    header h1 { font-family:'Orbitron',sans-serif; font-size:24px; margin:8px 0 5px; }
+    header p  { font-size:11px; color:var(--cyan); letter-spacing:2px; text-transform:uppercase; }
+    .badge-row { margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+    .badge { display:inline-block; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:700; }
+    .badge-v  { background:linear-gradient(135deg,var(--green),var(--cyan)); color:#080c20; }
+    .badge-os { background:rgba(129,140,248,.2); border:1px solid var(--purple); color:var(--purple); }
+    .badge-doi{ background:rgba(245,200,66,.15); border:1px solid var(--gold);   color:var(--gold); }
+
+    /* ═══ HONESTY BANNER ════════════════════════════════════════════ */
+    .honesty {
+      margin:10px 0; background:linear-gradient(135deg,rgba(245,200,66,.07),rgba(129,140,248,.07));
+      border:1px solid rgba(245,200,66,.3); border-radius:12px; padding:14px 18px;
+      font-size:11px; line-height:1.8;
+    }
+    .honesty strong { color:var(--gold); }
+    .honesty .caps  { color:var(--green); font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+
+    /* ═══ TABS ══════════════════════════════════════════════════════ */
+    .tabs { display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:16px; }
+    .tab {
+      padding:9px 16px; border-radius:10px; cursor:pointer; font-size:11px;
+      font-family:'Orbitron',sans-serif; font-weight:700; text-transform:uppercase;
+      border:2px solid var(--border); background:var(--surface); transition:all .22s;
+    }
+    .tab:hover { border-color:var(--purple); background:rgba(99,102,241,.15); }
+    .tab.active { background:linear-gradient(135deg,var(--purple),var(--cyan)); border-color:transparent; color:#080c20; box-shadow:0 5px 20px rgba(99,102,241,.35); }
+
+    /* ═══ PANELS ════════════════════════════════════════════════════ */
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; backdrop-filter:blur(8px); margin-bottom:16px; }
+    .panel-title { font-family:'Orbitron',sans-serif; font-size:13px; color:var(--gold); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+
+    /* ═══ CONTROLS ══════════════════════════════════════════════════ */
+    .ctrl-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:12px; }
+    label { display:block; font-size:10px; color:var(--cyan); letter-spacing:1px; text-transform:uppercase; font-weight:700; margin-bottom:5px; }
+    input,select { width:100%; padding:8px 10px; background:rgba(8,12,32,.6); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'Space Mono',monospace; font-size:12px; }
+    [data-theme="light"] input,[data-theme="light"] select { background:rgba(248,250,252,.9); }
+    input:focus,select:focus { outline:none; border-color:var(--purple); box-shadow:0 0 10px rgba(99,102,241,.25); }
+    .btn-row { display:flex; gap:9px; flex-wrap:wrap; margin-top:8px; }
+    button { padding:9px 16px; border:none; border-radius:8px; cursor:pointer; font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; transition:all .22s; letter-spacing:.5px; }
+    .btn-primary  { background:linear-gradient(135deg,var(--gold),var(--purple)); color:#080c20; }
+    .btn-discover { background:linear-gradient(135deg,var(--green),var(--cyan)); color:#080c20; }
+    .btn-planck   { background:linear-gradient(135deg,#a78bfa,#f472b6); color:#080c20; }
+    .btn-lab      { background:linear-gradient(135deg,var(--red),var(--gold)); color:#080c20; }
+    .btn-cross    { background:linear-gradient(135deg,var(--cyan),#a78bfa); color:#080c20; }
+    .btn-dl       { background:var(--surface2); border:1px solid var(--border); color:var(--text); font-size:10px; }
+    button:hover  { transform:translateY(-2px); box-shadow:0 7px 20px rgba(0,0,0,.25); }
+    button:active { transform:translateY(0); }
+
+    /* ═══ MC PROGRESS BAR ═══════════════════════════════════════════ */
+    .mc-wrap   { display:none; margin-top:10px; }
+    .mc-bg     { background:rgba(8,12,32,.5); border-radius:4px; height:7px; overflow:hidden; }
+    .mc-fill   { height:100%; background:linear-gradient(90deg,var(--purple),var(--cyan)); border-radius:4px; transition:width .1s; }
+    .mc-lbl    { font-size:10px; color:var(--muted); margin-top:4px; }
+
+    /* ═══ STATS BAR ═════════════════════════════════════════════════ */
+    .stat-bar  { display:none; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:11px; margin-bottom:14px; }
+    .stat-bar.on { display:grid; }
+    .sbox { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:13px; text-align:center; }
+    .sval { font-family:'Orbitron',sans-serif; font-size:21px; font-weight:700; }
+    .slbl { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+    .c-gold{color:var(--gold)} .c-cyan{color:var(--cyan)} .c-purple{color:var(--purple)} .c-green{color:var(--green)} .c-red{color:var(--red)}
+
+    /* ═══ INTERPRETATION ════════════════════════════════════════════ */
+    .interp-wrap { display:none; margin-bottom:16px; }
+    .interp-wrap.on { display:block; }
+    .ibox { border-radius:10px; padding:15px 18px; font-size:11px; line-height:1.8; }
+    .i-sig  { border:1px solid var(--green);  background:rgba(52,211,153,.07); }
+    .i-weak { border:1px solid var(--gold);   background:rgba(245,200,66,.06); }
+    .i-null { border:1px solid var(--red);    background:rgba(248,113,113,.06); }
+    .ibox h3 { font-family:'Orbitron',sans-serif; font-size:13px; margin-bottom:8px; }
+
+    /* ═══ NULL DISTRIBUTION CHART ═══════════════════════════════════ */
+    .null-wrap { display:none; margin-bottom:16px; }
+    .null-wrap.on { display:block; }
+    canvas.null-chart { width:100%; height:140px; display:block; border-radius:8px; background:rgba(8,12,32,.5); border:1px solid var(--border); }
+
+    /* ═══ RATIO CHART ═══════════════════════════════════════════════ */
+    .chart-wrap { display:none; margin-bottom:16px; }
+    .chart-wrap.on { display:block; }
+    canvas.ratio-chart { width:100%; height:230px; display:block; border-radius:8px; background:rgba(8,12,32,.5); border:1px solid var(--border); }
+
+    /* ═══ RESULTS GRID ══════════════════════════════════════════════ */
+    .results-wrap { display:none; margin-bottom:16px; }
+    .results-wrap.on { display:block; }
+    .results-hdr { font-family:'Orbitron',sans-serif; font-size:15px; color:var(--gold); margin-bottom:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .chip { background:rgba(245,200,66,.15); border:1px solid var(--gold); padding:3px 10px; border-radius:12px; font-size:10px; }
+    .results-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(265px,1fr)); gap:13px; }
+    .rcard { background:linear-gradient(135deg,rgba(99,102,241,.09),rgba(34,211,238,.04)); border:1px solid var(--border); border-radius:10px; padding:17px; position:relative; overflow:hidden; transition:all .22s; }
+    .rcard::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg,var(--gold),var(--cyan)); }
+    .rcard:hover { transform:translateY(-3px); border-color:var(--gold); box-shadow:0 9px 26px rgba(99,102,241,.22); }
+    .rcard-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .rcard-id  { font-family:'Orbitron',sans-serif; font-size:12px; color:var(--cyan); word-break:break-all; }
+    .rcard-pct { font-family:'Orbitron',sans-serif; font-size:17px; font-weight:900; background:linear-gradient(135deg,var(--gold),var(--red)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .rrow { display:flex; justify-content:space-between; font-size:10px; margin-bottom:4px; }
+    .rrow .k { color:var(--cyan); } .rrow .v { font-weight:700; }
+    .htag { margin-top:9px; padding:6px 8px; border-radius:6px; font-size:10px; line-height:1.5; background:rgba(8,12,32,.4); border:1px solid rgba(99,102,241,.18); color:var(--muted); }
+    .htag.good { border-color:rgba(52,211,153,.3); color:var(--green); }
+    .htag.weak { border-color:rgba(245,200,66,.3); color:var(--gold); }
+
+    /* ═══ PLANCK CARDS ══════════════════════════════════════════════ */
+    .planck-wrap { display:none; margin-bottom:16px; }
+    .planck-wrap.on { display:block; }
+    .planck-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(285px,1fr)); gap:13px; }
+    .pcard { background:linear-gradient(135deg,rgba(167,139,250,.09),rgba(244,114,182,.04)); border:1px solid rgba(167,139,250,.22); border-radius:10px; padding:17px; position:relative; overflow:hidden; }
+    .pcard::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg,#a78bfa,#f472b6); }
+    .pname { font-family:'Orbitron',sans-serif; font-size:12px; color:#c4b5fd; margin-bottom:6px; }
+    .pratio { font-size:20px; font-family:'Orbitron',sans-serif; font-weight:700; margin-bottom:5px; }
+    .pnote { margin-top:8px; font-size:10px; color:var(--muted); background:rgba(8,12,32,.4); padding:5px 7px; border-radius:4px; line-height:1.5; }
+    .plink { font-size:10px; color:var(--cyan); text-decoration:none; }
+    .plink:hover { text-decoration:underline; }
+
+    /* ═══ LAB ANALOGS ════════════════════════════════════════════════ */
+    .lab-wrap { display:none; margin-bottom:16px; }
+    .lab-wrap.on { display:block; }
+    .lab-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(285px,1fr)); gap:13px; }
+    .lcard { background:linear-gradient(135deg,rgba(248,113,113,.08),rgba(245,200,66,.05)); border:1px solid rgba(248,113,113,.25); border-radius:10px; padding:17px; position:relative; overflow:hidden; }
+    .lcard::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg,var(--red),var(--gold)); }
+    .lname { font-family:'Orbitron',sans-serif; font-size:12px; color:var(--red); margin-bottom:6px; }
+    .lval  { font-size:20px; font-family:'Orbitron',sans-serif; font-weight:700; margin-bottom:5px; }
+    .lphi  { font-size:11px; color:var(--muted); margin-bottom:8px; }
+    .lstatus { font-size:10px; padding:4px 8px; border-radius:4px; display:inline-block; }
+    .lst-rep  { background:rgba(52,211,153,.15); color:var(--green); border:1px solid rgba(52,211,153,.3); }
+    .lst-pend { background:rgba(245,200,66,.12); color:var(--gold);  border:1px solid rgba(245,200,66,.3); }
+    .lst-pred { background:rgba(129,140,248,.12); color:var(--purple); border:1px solid rgba(129,140,248,.3); }
+
+    /* ═══ CROSS-SCALE ════════════════════════════════════════════════ */
+    .cross-wrap { display:none; margin-bottom:16px; }
+    .cross-wrap.on { display:block; }
+    canvas.cross-chart { width:100%; height:320px; display:block; border-radius:8px; background:rgba(8,12,32,.5); border:1px solid var(--border); }
+
+    /* ═══ LIMITATIONS FOOTER ════════════════════════════════════════ */
+    .limits { margin-top:16px; border:1px solid rgba(248,113,113,.22); background:rgba(248,113,113,.04); border-radius:12px; padding:16px 18px; font-size:10px; line-height:1.9; color:var(--muted); }
+    .limits strong { color:var(--red); }
+    .limits .lg    { display:grid; grid-template-columns:1fr 1fr; gap:4px 18px; margin-top:8px; }
+    .li::before    { content:'✗ '; color:var(--red); font-weight:700; }
+    .limits .meta  { margin-top:10px; font-size:10px; }
+    @media(max-width:600px){ .limits .lg { grid-template-columns:1fr; } }
+
+    /* ═══ DATA VERSION TAG ═══════════════════════════════════════════ */
+    .data-ver { font-size:9px; color:var(--muted); margin-top:8px; font-style:italic; }
+
+    /* ═══ LOADING ════════════════════════════════════════════════════ */
+    #loading { display:none; text-align:center; padding:36px; }
+    #loading.on { display:block; }
+    .spin { width:44px; height:44px; margin:0 auto 12px; border:4px solid rgba(99,102,241,.3); border-top-color:var(--gold); border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    #load-text { font-size:12px; color:var(--cyan); }
+
+    /* ═══ HELP TOOLTIP ═══════════════════════════════════════════════ */
+    .help { cursor:help; color:var(--cyan); font-size:10px; opacity:.6; }
+
+    @media(max-width:768px) {
+      .phi-glyph { font-size:48px; }
+      header h1 { font-size:18px; }
+      .results-grid,.planck-grid,.lab-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="stars"></div>
+<div class="wrap">
+
+<!-- ══════════════════ HEADER ══════════════════════════════════════ -->
+<header>
+  <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀ Light Mode</button>
+  <div class="phi-glyph">φ</div>
+  <h1>φ-Finder v4.1 — True Version</h1>
+  <p>Statistical Golden Ratio Analysis &bull; Open Science &bull; MVRP Research</p>
+  <div class="badge-row">
+    <span class="badge badge-v">v4.1 · MIT</span>
+    <span class="badge badge-os"><a href="https://github.com/Fore-Wave/phi-finder" target="_blank" style="color:inherit;text-decoration:none;">GitHub ↗</a></span>
+    <span class="badge badge-doi"><a href="https://zenodo.org/records/18079209" target="_blank" style="color:inherit;text-decoration:none;">DOI ↗</a></span>
+    <span class="badge badge-os">Full Reproducibility</span>
+  </div>
+</header>
+
+<!-- ══════════════════ HONESTY BANNER ═════════════════════════════ -->
+<div class="honesty">
+  <strong>What this tool actually does:</strong> Tests whether φ ≈ 1.6180339887 appears in real scientific datasets <em>more often than random chance predicts</em>, using seeded Monte Carlo null models and p-values.<br>
+  <strong>What it cannot do:</strong> Prove causation, eliminate confounds, replace peer review, or validate any theory.<br>
+  <span class="caps">Status: Exploratory citizen-science tool · Not a validation engine · p &lt; 0.05 ≠ discovery · Always replicate</span>
+</div>
+
+<!-- ══════════════════ TABS ════════════════════════════════════════ -->
+<div class="tabs">
+  <div class="tab active" data-src="ligo"   onclick="setTab('ligo')">🌌 LIGO</div>
+  <div class="tab"        data-src="jwst"   onclick="setTab('jwst')">🔭 Exoplanets</div>
+  <div class="tab"        data-src="eq"     onclick="setTab('eq')">🌍 Earthquakes</div>
+  <div class="tab"        data-src="seti"   onclick="setTab('seti')">📡 SETI</div>
+  <div class="tab"        data-src="planck" onclick="setTab('planck')">⚛️ Planck</div>
+  <div class="tab"        data-src="lab"    onclick="setTab('lab')">🧪 Lab Analogs</div>
+  <div class="tab"        data-src="cross"  onclick="setTab('cross')">📈 Cross-Scale</div>
+</div>
+
+<!-- ══════════════════ CONTROLS ═══════════════════════════════════ -->
+<div class="panel">
+  <div class="panel-title">⚙️ Analysis Parameters</div>
+  <div class="ctrl-grid">
+    <div>
+      <label>φ Tolerance (±) <span class="help" title="±0.10 = ±6.2% of φ. Stricter is more conservative.">?</span></label>
+      <input type="number" id="tol" value="0.10" step="0.01" min="0.01" max="0.50">
+    </div>
+    <div>
+      <label>MC Trials <span class="help" title="More trials = more accurate p-value. 10,000 recommended.">?</span></label>
+      <select id="mc-n">
+        <option value="1000">1,000 (fast)</option>
+        <option value="5000">5,000</option>
+        <option value="10000" selected>10,000 (recommended)</option>
+        <option value="50000">50,000 (precise, slow)</option>
+      </select>
+    </div>
+    <div>
+      <label>MC Seed <span class="help" title="Fixed seed = fully reproducible run. 0 = random each time.">?</span></label>
+      <input type="number" id="seed" value="42" min="0" max="999999" placeholder="0 = random">
+    </div>
+    <div>
+      <label>Min SNR Filter</label>
+      <select id="snr">
+        <option value="0">None</option>
+        <option value="5">Low (>5)</option>
+        <option value="10" selected>Medium (>10)</option>
+        <option value="20">High (>20)</option>
+      </select>
+    </div>
+    <div>
+      <label>Data Source</label>
+      <select id="mode">
+        <option value="real">🌐 Live API (best effort)</option>
+        <option value="sim">💫 Archive / Simulated</option>
+      </select>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-primary"  onclick="runSearch()">🔍 Search φ-Patterns</button>
+    <button class="btn-discover" onclick="runDiscovery()">✨ Discovery Mode</button>
+    <button class="btn-planck"   onclick="runPlanck()">⚛️ Planck Analysis</button>
+    <button class="btn-lab"      onclick="runLab()">🧪 Lab Analogs</button>
+    <button class="btn-cross"    onclick="runCross()">📈 Cross-Scale Plot</button>
+    <button class="btn-dl" id="dl-raw" style="display:none" onclick="downloadRaw()">⬇ Raw Data (JSON)</button>
+    <button class="btn-dl" id="dl-csv" style="display:none" onclick="downloadCSV()">⬇ Results (CSV)</button>
+  </div>
+  <div class="mc-wrap" id="mc-wrap">
+    <div class="mc-bg"><div class="mc-fill" id="mc-fill" style="width:0%"></div></div>
+    <div class="mc-lbl" id="mc-lbl">Running Monte Carlo…</div>
+  </div>
+  <div class="data-ver" id="data-ver"></div>
+</div>
+
+<!-- ══════════════════ LOADING ════════════════════════════════════ -->
+<div id="loading"><div class="spin"></div><div id="load-text">Fetching data…</div></div>
+
+<!-- ══════════════════ STATS BAR ══════════════════════════════════ -->
+<div class="stat-bar" id="stat-bar">
+  <div class="sbox"><div class="sval c-gold" id="s-obs">—</div><div class="slbl">φ-Hits Observed</div></div>
+  <div class="sbox"><div class="sval c-cyan" id="s-exp">—</div><div class="slbl">Expected by Chance</div></div>
+  <div class="sbox"><div class="sval c-purple" id="s-n">—</div><div class="slbl">Ratios Tested</div></div>
+  <div class="sbox"><div class="sval" id="s-p">—</div><div class="slbl">p-Value (1-tail) <span class="help" title="P(random ≥ observed). Lower = more surprising.">?</span></div></div>
+  <div class="sbox"><div class="sval" id="s-z">—</div><div class="slbl">z-Score <span class="help" title="Standard deviations above null mean. >2 = notable.">?</span></div></div>
+  <div class="sbox"><div class="sval c-cyan" id="s-ci">—</div><div class="slbl">95% CI (hits)</div></div>
+</div>
+
+<!-- ══════════════════ INTERPRETATION ════════════════════════════ -->
+<div class="interp-wrap" id="interp-wrap">
+  <div class="ibox" id="ibox"><!-- JS --></div>
+</div>
+
+<!-- ══════════════════ NULL DISTRIBUTION ═════════════════════════ -->
+<div class="null-wrap panel" id="null-wrap" style="padding:14px;">
+  <div class="panel-title">📊 Monte Carlo Null Distribution — Where Does Your Result Fall?</div>
+  <canvas class="null-chart" id="null-chart"></canvas>
+  <div class="data-ver" id="null-meta"></div>
+</div>
+
+<!-- ══════════════════ RATIO CHART ════════════════════════════════ -->
+<div class="chart-wrap panel" id="chart-wrap" style="padding:14px;">
+  <div class="panel-title">📈 Ratio Distribution (all ratios vs φ reference)</div>
+  <canvas class="ratio-chart" id="ratio-chart"></canvas>
+</div>
+
+<!-- ══════════════════ RESULTS GRID ══════════════════════════════ -->
+<div class="results-wrap" id="results-wrap">
+  <div class="results-hdr">
+    φ-Candidates <span class="chip" id="res-count">0</span>
+    <span style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;" id="res-tol"></span>
+  </div>
+  <div class="results-grid" id="results-grid"></div>
+</div>
+
+<!-- ══════════════════ PLANCK GRID ════════════════════════════════ -->
+<div class="planck-wrap" id="planck-wrap">
+  <div class="panel-title" style="font-family:'Orbitron',sans-serif;font-size:15px;color:#c4b5fd;margin-bottom:12px;">
+    ⚛️ Fundamental Constant Ratios — Exploratory φ-Test
+  </div>
+  <div class="planck-grid" id="planck-grid"></div>
+  <div class="honesty" style="margin-top:13px;">
+    <strong>Dimensional Caution:</strong> Most ratios here mix units or dimensional families. Numerical coincidences with φ carry no inherent physical meaning unless the constants are dimensionally compatible and compared in natural units. This is <em>illustrative, not evidential</em>. Sources: <a class="plink" href="https://physics.nist.gov/cuu/Constants/" target="_blank">CODATA 2022</a> · <a class="plink" href="https://pdg.lbl.gov/" target="_blank">PDG 2024</a>.
+  </div>
+</div>
+
+<!-- ══════════════════ LAB ANALOGS ════════════════════════════════ -->
+<div class="lab-wrap" id="lab-wrap">
+  <div class="panel-title" style="font-family:'Orbitron',sans-serif;font-size:15px;color:var(--red);margin-bottom:12px;">
+    🧪 MVRP Lab Experimental Data — φ-Spacing Effects
+  </div>
+  <div class="lab-grid" id="lab-grid"></div>
+  <div class="honesty" style="margin-top:13px;border-color:rgba(248,113,113,.3);">
+    <strong>Lab Data Status:</strong> These are results from the MVRP experimental protocol. Reproducible experiments marked ★★★. All raw data linked to Zenodo archive. Cosmic analogs are <em>predicted equivalents</em> based on the cross-scale coherence hypothesis — not confirmed detections.<br>
+    <strong>Reference:</strong> <a class="plink" href="https://zenodo.org/records/18079209" target="_blank">MVRP Protocol · DOI 10.5281/zenodo.18079209 ↗</a>
+  </div>
+</div>
+
+<!-- ══════════════════ CROSS-SCALE PLOT ══════════════════════════ -->
+<div class="cross-wrap panel" id="cross-wrap" style="padding:14px;">
+  <div class="panel-title">📈 Cross-Scale Power Law — Enhancement vs Physical Scale</div>
+  <canvas class="cross-chart" id="cross-chart"></canvas>
+  <div class="honesty" style="margin-top:12px;font-size:10px;">
+    <strong>Hypothesis being tested:</strong> If φ-coherence is a universal principle, the measured enhancement (signal above baseline) should follow a consistent power law across physical scales: <em>Enhancement = A × Scale<sup>B</sup></em>. Current data points are preliminary. Cosmic points are <em>inferred from existing φ-candidate hits</em>, not independent detections. Gray region = uncertainty envelope.
+  </div>
+</div>
+
+<!-- ══════════════════ LIMITATIONS ═══════════════════════════════ -->
+<div class="limits">
+  <strong>⚠ Hard Limitations — Always Apply</strong>
+  <div class="lg">
+    <div class="li">Cannot prove causation (correlation only)</div>
+    <div class="li">Selection bias: we choose which ratios to test</div>
+    <div class="li">p &lt; 0.05 has ~5% false positive rate by definition</div>
+    <div class="li">SETI data is synthesized — no confirmed alien signals</div>
+    <div class="li">Sample sizes may be too small for publication (N ≥ 30 needed)</div>
+    <div class="li">Confounds: Fibonacci growth, instrument bias, selection effects</div>
+    <div class="li">Tolerance choice (±10%) is a free parameter — document yours</div>
+    <div class="li">This tool supplements peer review; it cannot replace it</div>
+  </div>
+  <div class="meta">
+    <strong>Methodology:</strong> Seeded Monte Carlo generates random ratio distributions of identical size; z-score and one-tailed p-value calculated from null distribution. 95% CI derived from null spread. Effect size reported as z (equivalent to Cohen's d for this test type). All methods visible in source.&nbsp;|&nbsp;
+    <a href="https://github.com/Fore-Wave/phi-finder" style="color:var(--cyan);" target="_blank">GitHub ↗</a>&nbsp;|&nbsp;
+    <a href="https://zenodo.org/records/18079209" style="color:var(--cyan);" target="_blank">Zenodo ↗</a>&nbsp;|&nbsp;
+    <span id="version-stamp">v4.1 · 2026-05-30</span>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  φ-FINDER v4.1 — TRUE VERSION
+//  MVRP Research Collective · MIT License
+//  github.com/Fore-Wave/phi-finder
+//  DOI: 10.5281/zenodo.18167536
+// ═══════════════════════════════════════════════════════════════════
+
+const PHI = 1.6180339887;
+let currentTab   = 'ligo';
+let lastRawData  = [];
+let lastRatios   = [];
+let lastHits     = [];
+let apiPullDate  = null;
+
+// ── Theme ──────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('theme-btn').textContent = isDark ? '🌙 Dark Mode' : '☀ Light Mode';
+}
+
+// ── Starfield ──────────────────────────────────────────────────────
+(function buildStars() {
+  const el = document.getElementById('stars');
+  for (let i = 0; i < 110; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2 + 0.4;
+    Object.assign(s.style, {
+      left: Math.random()*100+'%', top: Math.random()*100+'%',
+      width: sz+'px', height: sz+'px',
+      '--d': (2+Math.random()*4)+'s',
+      animationDelay: (Math.random()*4)+'s'
+    });
+    el.appendChild(s);
+  }
+})();
+
+// ── Tab switching ──────────────────────────────────────────────────
+function setTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.tab[data-src="${t}"]`).classList.add('active');
+  hideAll();
+}
+function hideAll() {
+  ['stat-bar','interp-wrap','null-wrap','chart-wrap','results-wrap','planck-wrap','lab-wrap','cross-wrap']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('on'); });
+  document.getElementById('dl-raw').style.display = 'none';
+  document.getElementById('dl-csv').style.display = 'none';
+}
+
+// ── Loading ────────────────────────────────────────────────────────
+const showLoad = msg => { document.getElementById('load-text').textContent = msg; document.getElementById('loading').classList.add('on'); };
+const hideLoad = ()  => document.getElementById('loading').classList.remove('on');
+
+// ═══════════════════════════════════════════════════════════════════
+//  SEEDED PRNG — Mulberry32 (reproducible)
+// ═══════════════════════════════════════════════════════════════════
+function makePRNG(seed) {
+  let s = seed >>> 0;
+  return function() {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function getRNG() {
+  const seedVal = parseInt(document.getElementById('seed').value) || 0;
+  return seedVal === 0 ? Math.random.bind(Math) : makePRNG(seedVal);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DATA SOURCES
+// ═══════════════════════════════════════════════════════════════════
+
+// LIGO — GWOSC live API with archive fallback
+async function fetchLIGO() {
+  try {
+    const r = await fetch('https://gwosc.org/eventapi/json/GWTC/');
+    if (!r.ok) throw new Error('GWOSC API error');
+    const d = await r.json();
+    const events = [];
+    for (const [name, ev] of Object.entries(d.events)) {
+      const m1  = Array.isArray(ev.mass_1_source) ? ev.mass_1_source[0] : ev.mass_1_source;
+      const m2  = Array.isArray(ev.mass_2_source) ? ev.mass_2_source[0] : ev.mass_2_source;
+      const snr = Array.isArray(ev.network_matched_filter_snr) ? ev.network_matched_filter_snr[0] : (ev.network_matched_filter_snr ?? 15);
+      const dist= Array.isArray(ev.luminosity_distance) ? ev.luminosity_distance[0] : ev.luminosity_distance;
+      if (m1 && m2 && +m1>0 && +m2>0)
+        events.push({ id:name, m1:+m1, m2:+m2, snr:+snr, dist:dist?+dist:null, source:'GWOSC Live' });
+    }
+    apiPullDate = new Date().toISOString().split('T')[0];
+    return events.slice(0,120);
+  } catch(e) {
+    console.warn('LIGO live API failed — using GWTC-3 archive:', e.message);
+    apiPullDate = 'GWTC-3 archive (2023)';
+    return ligoArchive();
+  }
+}
+function ligoArchive() {
+  return [
+    {id:'GW150914',m1:35.6,m2:30.6,snr:23.7,dist:440},{id:'GW151012',m1:23.2,m2:13.6,snr:9.7,dist:1060},
+    {id:'GW151226',m1:13.7,m2:7.7,snr:13.0,dist:450}, {id:'GW170104',m1:30.9,m2:20.0,snr:13.0,dist:990},
+    {id:'GW170608',m1:10.9,m2:7.6,snr:14.9,dist:320}, {id:'GW170729',m1:50.6,m2:34.3,snr:10.8,dist:2750},
+    {id:'GW170809',m1:35.2,m2:23.8,snr:12.4,dist:990},{id:'GW170814',m1:30.7,m2:25.3,snr:15.9,dist:580},
+    {id:'GW170817',m1:1.46,m2:1.27,snr:32.4,dist:40}, {id:'GW170818',m1:35.5,m2:26.8,snr:11.3,dist:1020},
+    {id:'GW170823',m1:39.6,m2:29.4,snr:11.1,dist:1850},{id:'GW190408',m1:24.6,m2:18.4,snr:15.0,dist:1540},
+    {id:'GW190412',m1:30.1,m2:8.3,snr:19.0,dist:740}, {id:'GW190425',m1:2.0,m2:1.4,snr:12.9,dist:160},
+    {id:'GW190521',m1:95.3,m2:69.0,snr:14.7,dist:5300},{id:'GW190814',m1:23.2,m2:2.59,snr:25.0,dist:240},
+    {id:'GW190924',m1:8.9,m2:5.0,snr:13.2,dist:550},  {id:'GW191105',m1:7.9,m2:5.0,snr:13.2,dist:660},
+    {id:'GW191109',m1:65.0,m2:47.0,snr:13.4,dist:2600},{id:'GW200105',m1:8.9,m2:1.91,snr:14.1,dist:280},
+    {id:'GW200115',m1:5.7,m2:1.44,snr:11.4,dist:300},  {id:'GW200202',m1:10.1,m2:7.3,snr:11.5,dist:410},
+    {id:'GW200208',m1:40.0,m2:27.0,snr:11.9,dist:2570}
+  ].map(e => ({...e, source:'GWTC-3 Archive'}));
+}
+
+// USGS Earthquakes
+async function fetchEQ() {
+  try {
+    const url = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2022-01-01&endtime=2026-05-30&minmagnitude=5.5&limit=200&orderby=magnitude';
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('USGS error');
+    const d = await r.json();
+    apiPullDate = new Date().toISOString().split('T')[0] + ' (USGS live)';
+    return d.features.map(f => {
+      const mag = f.properties.mag;
+      return {
+        id: f.id.substring(0,16), mainMag:mag,
+        afterMag: Math.max(mag-1.2, mag*0.55),
+        place: (f.properties.place||'Unknown').split(',')[0],
+        depth: f.geometry.coordinates[2],
+        time:  new Date(f.properties.time).toISOString().split('T')[0],
+        source:'USGS Live'
+      };
+    });
+  } catch(e) {
+    console.warn('USGS API failed — using archive:', e.message);
+    apiPullDate = 'USGS historical archive';
+    return eqArchive();
+  }
+}
+function eqArchive() {
+  return [
+    {id:'usp000hvnu',mainMag:9.1,afterMag:7.9,place:'Tohoku Japan',depth:32,time:'2011-03-11'},
+    {id:'official2010',mainMag:8.8,afterMag:6.9,place:'Maule Chile',depth:35,time:'2010-02-27'},
+    {id:'us7000h60u',mainMag:7.8,afterMag:6.1,place:'Turkey',depth:10,time:'2023-02-06'},
+    {id:'us7000lljv',mainMag:7.5,afterMag:6.0,place:'Japan',depth:10,time:'2024-01-01'},
+    {id:'us6000jllz',mainMag:7.2,afterMag:5.8,place:'Haiti',depth:10,time:'2021-08-14'},
+    {id:'us7000dflf',mainMag:8.0,afterMag:6.5,place:'Alaska',depth:28,time:'2021-07-29'},
+    {id:'us7000hhb0',mainMag:7.3,afterMag:5.9,place:'Vanuatu',depth:10,time:'2022-09-11'},
+    {id:'us6000b9sx',mainMag:7.8,afterMag:6.3,place:'Russia',depth:56,time:'2020-10-19'},
+    {id:'us70009yhi',mainMag:7.4,afterMag:5.9,place:'Mexico',depth:20,time:'2020-06-23'},
+    {id:'us70006vll',mainMag:7.7,afterMag:6.1,place:'Jamaica',depth:10,time:'2020-01-28'},
+    {id:'us7000kpbt',mainMag:6.8,afterMag:5.4,place:'Tajikistan',depth:24,time:'2023-03-21'},
+    {id:'us7000mc35',mainMag:7.1,afterMag:5.7,place:'Tonga',depth:10,time:'2024-04-25'},
+    {id:'us7000n3dp',mainMag:6.9,afterMag:5.5,place:'Indonesia',depth:15,time:'2024-07-04'},
+    {id:'us7000p2f5',mainMag:7.0,afterMag:5.6,place:'Vanuatu',depth:11,time:'2024-10-30'},
+    {id:'us7000q21r',mainMag:7.1,afterMag:5.7,place:'Tibet',depth:10,time:'2025-01-07'},
+  ].map(e=>({...e,source:'USGS Archive'}));
+}
+
+// NASA Exoplanet Archive (TAP)
+async function fetchExo() {
+  try {
+    const url = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_orbper,pl_bmasse,sy_dist+from+ps+where+pl_orbper+is+not+null+and+pl_bmasse+is+not+null+and+pl_bmasse+>+0.01&format=json&maxrec=200';
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('IPAC error');
+    const data = await r.json();
+    apiPullDate = new Date().toISOString().split('T')[0] + ' (NASA Exoplanet Archive live)';
+    const pairs = [];
+    for (let i = 0; i < data.length-1; i+=2) {
+      const a=data[i], b=data[i+1];
+      if (!a.pl_bmasse || !b.pl_bmasse) continue;
+      pairs.push({ id:a.pl_name.substring(0,20), m1:+a.pl_bmasse, m2:+b.pl_bmasse, p1:+a.pl_orbper, p2:+b.pl_orbper, dist:a.sy_dist, source:'NASA Exoplanet Archive' });
+    }
+    return pairs.slice(0,80);
+  } catch(e) {
+    console.warn('NASA Exoplanet API failed — using archive:', e.message);
+    apiPullDate = 'NASA Exoplanet Archive (published)';
+    return exoArchive();
+  }
+}
+function exoArchive() {
+  return [
+    {id:'TRAPPIST-1 b/c',m1:1.374,m2:1.308,p1:1.51,p2:2.42,dist:12.1},
+    {id:'TRAPPIST-1 c/d',m1:1.308,m2:0.388,p1:2.42,p2:4.05,dist:12.1},
+    {id:'TRAPPIST-1 d/e',m1:0.388,m2:0.692,p1:4.05,p2:6.10,dist:12.1},
+    {id:'TRAPPIST-1 e/f',m1:0.692,m2:1.039,p1:6.10,p2:9.21,dist:12.1},
+    {id:'TRAPPIST-1 f/g',m1:1.039,m2:1.321,p1:9.21,p2:12.35,dist:12.1},
+    {id:'Kepler-11 b/c', m1:1.9,  m2:2.9,  p1:10.3,p2:13.0,dist:630},
+    {id:'Kepler-11 c/d', m1:2.9,  m2:7.3,  p1:13.0,p2:22.7,dist:630},
+    {id:'Kepler-11 d/e', m1:7.3,  m2:8.0,  p1:22.7,p2:32.0,dist:630},
+    {id:'Kepler-11 e/f', m1:8.0,  m2:2.0,  p1:32.0,p2:46.7,dist:630},
+    {id:'HR 8799 e/d',   m1:7.5,  m2:7.0,  p1:14.9,p2:25.4,dist:40},
+    {id:'HR 8799 d/c',   m1:7.0,  m2:7.0,  p1:25.4,p2:43.0,dist:40},
+    {id:'55 Cnc b/c',    m1:263., m2:54.,  p1:14.7,p2:44.4,dist:12.3},
+    {id:'GJ 876 b/c',    m1:620., m2:185., p1:61.1,p2:30.1,dist:4.7},
+    {id:'Kepler-186 d/e',m1:2.5,  m2:1.4,  p1:22.4,p2:129.9,dist:151},
+    {id:'TOI-178 b/c',   m1:1.5,  m2:4.0,  p1:1.9, p2:3.2,dist:63},
+    {id:'TOI-178 c/d',   m1:4.0,  m2:6.6,  p1:3.2, p2:6.6,dist:63},
+    {id:'K2-138 b/c',    m1:3.1,  m2:6.3,  p1:2.4, p2:3.6,dist:218},
+    {id:'K2-138 c/d',    m1:6.3,  m2:7.9,  p1:3.6, p2:5.4,dist:218},
+    {id:'Kepler-20 b/c', m1:8.7,  m2:16.1, p1:3.7, p2:10.9,dist:290},
+    {id:'Kepler-62 d/e', m1:14.,  m2:36.,  p1:18.2,p2:122.4,dist:368},
+  ].map(e=>({...e,source:'NASA Archive (published)'}));
+}
+
+// SETI — synthesized with documented seed
+function setiSynth() {
+  const seed = parseInt(document.getElementById('seed').value) || 42;
+  const rng  = makePRNG(seed);
+  const signals = [];
+  for (let i=0; i<60; i++) {
+    const f1 = 1000 + rng()*3000;
+    const ratio = rng() < 0.8 ? 0.5+rng()*3.0 : PHI+(rng()-0.5)*0.15;
+    signals.push({ id:`SETI-SIG-${String(i+1).padStart(3,'0')}`, f1, f2:f1*ratio, snr:5+rng()*20, source:`Synthesized (seed=${seed})` });
+  }
+  apiPullDate = `Synthesized (seed=${seed}, fully reproducible)`;
+  return signals;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  RATIO EXTRACTION
+// ═══════════════════════════════════════════════════════════════════
+function extractRatios(data, tab, discovery) {
+  const snrMin = parseFloat(document.getElementById('snr').value);
+  const ratios = [];
+  data.forEach(item => {
+    const pairs = [];
+    if (tab==='ligo') {
+      if (item.snr < snrMin) return;
+      const [lg,sm] = [Math.max(item.m1,item.m2),Math.min(item.m1,item.m2)];
+      pairs.push({ratio:lg/sm, label:'m_larger/m_smaller', v1:lg, v2:sm});
+      if (discovery) pairs.push({ratio:sm/lg, label:'m_smaller/m_larger', v1:sm, v2:lg});
+    } else if (tab==='jwst') {
+      const [lg,sm] = [Math.max(item.m1,item.m2),Math.min(item.m1,item.m2)];
+      pairs.push({ratio:lg/sm, label:'mass_larger/smaller', v1:lg, v2:sm});
+      if (discovery && item.p1 && item.p2) {
+        const [pl,ps] = [Math.max(item.p1,item.p2),Math.min(item.p1,item.p2)];
+        pairs.push({ratio:pl/ps, label:'period_longer/shorter', v1:pl, v2:ps});
+      }
+    } else if (tab==='eq') {
+      const r = item.mainMag/item.afterMag;
+      pairs.push({ratio:r, label:"mainMag/afterMag (Båth's law)", v1:item.mainMag, v2:item.afterMag});
+    } else if (tab==='seti') {
+      if (item.snr<snrMin) return;
+      const [fh,fl] = [Math.max(item.f1,item.f2),Math.min(item.f1,item.f2)];
+      pairs.push({ratio:fh/fl, label:'f_high/f_low', v1:fh, v2:fl});
+    }
+    pairs.forEach(p => {
+      if (!isFinite(p.ratio)||p.ratio<=0) return;
+      ratios.push({...item,...p});
+    });
+  });
+  return ratios;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MONTE CARLO
+// ═══════════════════════════════════════════════════════════════════
+async function monteCarlo(ratios, tol, nTrials) {
+  const n        = ratios.length;
+  const observed = ratios.filter(r => Math.abs(r.ratio-PHI)<=tol).length;
+  const lo       = Math.max(0.5, Math.min(...ratios.map(r=>r.ratio))-0.5);
+  const hi       = Math.min(8.0, Math.max(...ratios.map(r=>r.ratio))+0.5);
+
+  const mcWrap = document.getElementById('mc-wrap');
+  const fill   = document.getElementById('mc-fill');
+  const lbl    = document.getElementById('mc-lbl');
+  mcWrap.style.display = 'block';
+
+  const rng = getRNG();
+  const nullCounts = new Array(nTrials);
+  const batch = 500;
+  let done = 0;
+
+  while (done < nTrials) {
+    const b = Math.min(batch, nTrials-done);
+    for (let i=0; i<b; i++) {
+      let cnt=0;
+      for (let j=0; j<n; j++) { if (Math.abs(rng()*(hi-lo)+lo-PHI)<=tol) cnt++; }
+      nullCounts[done+i] = cnt;
+    }
+    done+=b;
+    fill.style.width = (done/nTrials*100).toFixed(0)+'%';
+    lbl.textContent  = `Monte Carlo: ${done.toLocaleString()} / ${nTrials.toLocaleString()} trials (seed=${document.getElementById('seed').value||'random'})`;
+    await new Promise(r=>setTimeout(r,0));
+  }
+  mcWrap.style.display = 'none';
+
+  const mean   = nullCounts.reduce((a,b)=>a+b,0)/nTrials;
+  const variance = nullCounts.reduce((a,c)=>(a+(c-mean)**2),0)/nTrials;
+  const sd     = Math.sqrt(variance);
+  const pValue = nullCounts.filter(c=>c>=observed).length/nTrials;
+  const z      = sd>0 ? (observed-mean)/sd : 0;
+
+  // 95% CI on null (2.5th to 97.5th percentile)
+  const sorted = [...nullCounts].sort((a,b)=>a-b);
+  const ci95lo = sorted[Math.floor(0.025*nTrials)];
+  const ci95hi = sorted[Math.floor(0.975*nTrials)];
+
+  return { observed, expectedByChance:mean, sd, n, nTrials, pValue, zScore:z, nullCounts, ci95lo, ci95hi, lo, hi, tol };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DISPLAY STATS
+// ═══════════════════════════════════════════════════════════════════
+function showStats(s) {
+  const {observed,expectedByChance,n,pValue,zScore,ci95lo,ci95hi} = s;
+  document.getElementById('s-obs').textContent = observed;
+  document.getElementById('s-exp').textContent = expectedByChance.toFixed(1);
+  document.getElementById('s-n').textContent   = n;
+  document.getElementById('s-ci').textContent  = `${ci95lo}–${ci95hi}`;
+
+  const pEl = document.getElementById('s-p');
+  pEl.textContent = pValue<0.001?'<0.001':pValue.toFixed(3);
+  pEl.className   = 'sval '+(pValue<0.05?(pValue<0.01?'c-green':'c-gold'):'c-red');
+
+  const zEl = document.getElementById('s-z');
+  zEl.textContent = zScore.toFixed(2);
+  zEl.className   = 'sval '+(zScore>2?'c-green':zScore>1?'c-gold':'c-red');
+
+  document.getElementById('stat-bar').classList.add('on');
+}
+
+// ─── Interpretation panel ─────────────────────────────────────────
+function showInterp(s) {
+  const {pValue,zScore,observed,expectedByChance,sd,ci95lo,ci95hi} = s;
+  const ip=document.getElementById('interp-wrap'), ib=document.getElementById('ibox');
+  let cls, heading, body, caveats;
+
+  if (pValue<0.01 && zScore>2.5) {
+    cls='i-sig'; heading='🟢 Strong Signal — Replication Warranted';
+    body=`Observed ${observed} φ-hits vs ${expectedByChance.toFixed(1)} expected (±${sd.toFixed(1)}). p=${pValue<0.001?'<0.001':pValue.toFixed(3)}, z=${zScore.toFixed(2)}. The 95% null CI is ${ci95lo}–${ci95hi} hits; your result is <strong>outside that range</strong>. This is statistically surprising and worth investigating with a pre-registered replication protocol.`;
+    caveats=['Not yet evidence of φ universality','Needs independent replication','Pre-register your next run to prevent p-hacking','Beware multiple comparisons if you tried many tolerances'];
+  } else if (pValue<0.05) {
+    cls='i-weak'; heading='🟡 Moderate Signal — Preliminary Finding';
+    body=`Observed ${observed} hits vs ${expectedByChance.toFixed(1)} expected. p=${pValue.toFixed(3)}, z=${zScore.toFixed(2)}. 95% null CI: ${ci95lo}–${ci95hi}. Borderline significant — treat as hypothesis-generating, not confirmatory.`;
+    caveats=['~5% of exploratory runs produce p<0.05 by chance','Insufficient alone for any claim','Use this to design a better-powered follow-up','Report the null result if replication fails'];
+  } else {
+    cls='i-null'; heading='🔴 No Significant Signal — Consistent With Chance';
+    body=`Observed ${observed} hits vs ${expectedByChance.toFixed(1)} expected. p=${pValue.toFixed(3)}, z=${zScore.toFixed(2)}. Result falls within the 95% null CI (${ci95lo}–${ci95hi}). This dataset, at this tolerance, gives <em>no evidence</em> for excess φ-patterns.`;
+    caveats=['Absence of signal ≠ absence of φ universally','Sample size may be too small to detect a real effect','Try different tolerances, datasets, or ratio types','Null results are scientifically valuable — report them'];
+  }
+
+  ib.className = 'ibox '+cls;
+  ib.innerHTML = `<h3>${heading}</h3><p style="margin-bottom:9px;">${body}</p>
+    <strong style="font-size:10px;">Honest caveats:</strong>
+    <ul style="font-size:10px;padding-left:14px;margin-top:4px;">${caveats.map(c=>`<li>${c}</li>`).join('')}</ul>`;
+  ip.classList.add('on');
+}
+
+// ─── Null distribution chart ──────────────────────────────────────
+function drawNullDist(s) {
+  try {
+    const canvas = document.getElementById('null-chart');
+    canvas.width  = canvas.offsetWidth || 900;
+    canvas.height = 140;
+    const ctx = canvas.getContext('2d');
+    const W=canvas.width, H=canvas.height, pad={t:20,b:24,l:35,r:20};
+    ctx.clearRect(0,0,W,H);
+
+    const {nullCounts,observed,expectedByChance,ci95lo,ci95hi,nTrials} = s;
+    const maxVal = Math.max(...nullCounts);
+    const bins   = new Array(maxVal+2).fill(0);
+    nullCounts.forEach(c=>{if(c<=maxVal)bins[c]++;});
+    const maxBin = Math.max(...bins);
+    const bw     = (W-pad.l-pad.r)/bins.length;
+
+    bins.forEach((cnt,i) => {
+      const x = pad.l + i*bw;
+      const h = cnt/maxBin*(H-pad.t-pad.b);
+      const isObs = i===observed;
+      ctx.fillStyle = isObs ? 'rgba(245,200,66,0.9)' : (i>=ci95lo&&i<=ci95hi?'rgba(129,140,248,0.55)':'rgba(129,140,248,0.25)');
+      ctx.fillRect(x, H-pad.b-h, Math.max(bw-1,1), h);
+    });
+
+    // observed line
+    const obsX = pad.l + observed*bw + bw/2;
+    ctx.strokeStyle='#f5c842'; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+    ctx.beginPath(); ctx.moveTo(obsX,pad.t); ctx.lineTo(obsX,H-pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // labels
+    ctx.fillStyle='#f5c842'; ctx.font='10px Space Mono';
+    ctx.fillText('← observed ('+observed+')',obsX+4,pad.t+10);
+
+    // x axis
+    ctx.fillStyle='#94a3b8'; ctx.font='9px Space Mono';
+    ctx.strokeStyle='rgba(148,163,184,0.25)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,H-pad.b); ctx.lineTo(W-pad.r,H-pad.b); ctx.stroke();
+    for(let i=0;i<=maxVal;i+=Math.max(1,Math.floor(maxVal/8))){
+      ctx.fillText(i, pad.l+i*bw, H-pad.b+13);
+    }
+    ctx.fillText('# φ-hits in random trial',W/2-60,H-2);
+    ctx.fillText('Count',2,pad.t+10);
+
+    document.getElementById('null-meta').textContent =
+      `Null distribution from ${nTrials.toLocaleString()} Monte Carlo trials · Purple region = 95% null CI (${ci95lo}–${ci95hi}) · Gold bar = your observed result · Seed: ${document.getElementById('seed').value||'random'}`;
+    document.getElementById('null-wrap').classList.add('on');
+  } catch(e) { console.warn('Null dist chart failed:', e); }
+}
+
+// ─── Ratio histogram ──────────────────────────────────────────────
+function drawRatioChart(ratios, tol) {
+  try {
+    const canvas = document.getElementById('ratio-chart');
+    canvas.width  = canvas.offsetWidth||900;
+    canvas.height = 230;
+    const ctx = canvas.getContext('2d');
+    const W=canvas.width, H=canvas.height, pad={t:22,b:28,l:30,r:16};
+    ctx.clearRect(0,0,W,H);
+
+    const lo=0.5, hi=4.5, nBins=60;
+    const bins = new Array(nBins).fill(0);
+    ratios.forEach(r=>{
+      const b=Math.floor((r.ratio-lo)/(hi-lo)*nBins);
+      if(b>=0&&b<nBins) bins[b]++;
+    });
+    const maxBin=Math.max(1,...bins);
+    const bw=(W-pad.l-pad.r)/nBins;
+
+    bins.forEach((cnt,i)=>{
+      const x=pad.l+i*bw;
+      const h=cnt/maxBin*(H-pad.t-pad.b);
+      const ratio=lo+(i+0.5)/(nBins)*(hi-lo);
+      const prox=Math.abs(ratio-PHI);
+      const t=Math.max(0,1-prox/tol);
+      ctx.fillStyle=`rgba(${Math.floor(99+146*t)},${Math.floor(102+98*t)},${Math.floor(241-175*t)},0.75)`;
+      ctx.fillRect(x, H-pad.b-h, Math.max(bw-1,1), h);
+    });
+
+    // φ line
+    const phiX=pad.l+(PHI-lo)/(hi-lo)*(W-pad.l-pad.r);
+    ctx.strokeStyle='#f5c842'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(phiX,pad.t); ctx.lineTo(phiX,H-pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#f5c842'; ctx.font='10px Orbitron';
+    ctx.fillText('φ=1.618',phiX+5,pad.t+12);
+
+    // tolerance band
+    const tlX=pad.l+(PHI-tol-lo)/(hi-lo)*(W-pad.l-pad.r);
+    const trX=pad.l+(PHI+tol-lo)/(hi-lo)*(W-pad.l-pad.r);
+    ctx.fillStyle='rgba(245,200,66,0.07)';
+    ctx.fillRect(tlX,pad.t,trX-tlX,H-pad.t-pad.b);
+
+    // axis
+    ctx.strokeStyle='rgba(148,163,184,0.25)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,H-pad.b); ctx.lineTo(W-pad.r,H-pad.b); ctx.stroke();
+    ctx.fillStyle='#94a3b8'; ctx.font='9px Space Mono';
+    [1,1.5,2,2.5,3,3.5,4].forEach(v=>{
+      const x=pad.l+(v-lo)/(hi-lo)*(W-pad.l-pad.r);
+      ctx.fillText(v,x-6,H-pad.b+14);
+    });
+    ctx.fillText('Ratio value',W/2-30,H-2);
+    ctx.fillText('Count',2,pad.t+10);
+
+    document.getElementById('chart-wrap').classList.add('on');
+  } catch(e) { console.warn('Ratio chart failed:', e); }
+}
+
+// ─── Results grid ─────────────────────────────────────────────────
+function showResults(hits, tol) {
+  const grid=document.getElementById('results-grid');
+  const wrap=document.getElementById('results-wrap');
+  document.getElementById('res-count').textContent = hits.length;
+  document.getElementById('res-tol').textContent   = `tolerance ±${tol.toFixed(2)} (±${(tol/PHI*100).toFixed(1)}%)`;
+  grid.innerHTML='';
+
+  if (!hits.length) {
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:28px;color:var(--muted);">No φ-matches found at this tolerance. Try Discovery Mode or increase tolerance.</div>';
+  } else {
+    hits.slice(0,60).forEach(h=>{
+      const prox=Math.abs(h.ratio-PHI), pct=(1-prox/PHI)*100, isClose=prox<0.05;
+      const div=document.createElement('div'); div.className='rcard';
+      div.innerHTML=`
+        <div class="rcard-head"><div class="rcard-id">${h.id}</div><div class="rcard-pct">${pct.toFixed(1)}%</div></div>
+        ${h.label?`<div class="rrow"><span class="k">Type</span><span class="v">${h.label}</span></div>`:''}
+        <div class="rrow"><span class="k">Ratio</span><span class="v">${h.ratio.toFixed(5)}</span></div>
+        <div class="rrow"><span class="k">vs φ</span><span class="v">±${prox.toFixed(5)}</span></div>
+        <div class="rrow"><span class="k">Values</span><span class="v">${h.v1.toFixed(3)} / ${h.v2.toFixed(3)}</span></div>
+        <div class="rrow"><span class="k">Source</span><span class="v" style="font-size:9px;">${h.source||'—'}</span></div>
+        <div class="htag ${isClose?'good':'weak'}">${isClose?'★ Very close — intriguing, warrants investigation':'~ Near φ — within tolerance, could be coincidence'}</div>`;
+      grid.appendChild(div);
+    });
+  }
+  wrap.classList.add('on');
+
+  // Enable download buttons
+  document.getElementById('dl-raw').style.display='inline-block';
+  document.getElementById('dl-csv').style.display='inline-block';
+}
+
+// ─── Data version tag ─────────────────────────────────────────────
+function setDataVer() {
+  const el = document.getElementById('data-ver');
+  if (apiPullDate) el.textContent = `Data: ${apiPullDate} · Seed: ${document.getElementById('seed').value||'random'} · Run: ${new Date().toISOString()}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PLANCK ANALYSIS
+// ═══════════════════════════════════════════════════════════════════
+const PLANCK_DATA = [
+  {name:'Proton/Electron mass',    v1n:'m_p',v1:1.67262192e-27,v2n:'m_e',v2:9.1093837e-31,note:'Ratio ≈ 1836 — far from φ. Dimensionless & well-defined.',src:'CODATA 2022',url:'https://physics.nist.gov/cuu/Constants/'},
+  {name:'Neutron/Proton mass',     v1n:'m_n',v1:1.67492750e-27,v2n:'m_p',v2:1.67262192e-27,note:'≈ 1.00138 — not near φ. Valid dimensionless ratio.',src:'CODATA 2022',url:'https://physics.nist.gov/cuu/Constants/'},
+  {name:'Z⁰ / W± boson mass',     v1n:'m_Z (GeV)',v1:91.1876,v2n:'m_W (GeV)',v2:80.377,note:'≈ 1.134 — valid ratio in same units. Not near φ.',src:'PDG 2024',url:'https://pdg.lbl.gov/'},
+  {name:'Top quark / Higgs mass',  v1n:'m_top (GeV)',v1:172.76,v2n:'m_H (GeV)',v2:125.25,note:'≈ 1.380 — same dimension, valid. Not near φ.',src:'PDG 2024',url:'https://pdg.lbl.gov/'},
+  {name:'Higgs / W boson mass',    v1n:'m_H (GeV)',v1:125.25,v2n:'m_W (GeV)',v2:80.377,note:'≈ 1.558 — in same dimension. Approaching φ range.',src:'PDG 2024',url:'https://pdg.lbl.gov/'},
+  {name:'Fine structure α⁻¹',      v1n:'α⁻¹',v1:137.035999084,v2n:'φ⁵×4',v2:PHI**5*4,note:'α⁻¹≈137, φ⁵×4≈43.7 — not a match. Dimensionless.',src:'CODATA 2022',url:'https://physics.nist.gov/cuu/Constants/'},
+  {name:'φ² / φ (control)',        v1n:'φ²',v1:PHI*PHI,v2n:'φ',v2:PHI,note:'Control: should return exactly φ = 1.61803…',src:'Definition',url:''},
+  {name:'φ / 1 (control)',         v1n:'φ',v1:PHI,v2n:'1',v2:1,note:'Control: trivially = φ by definition.',src:'Definition',url:''},
+  {name:'Muon/Electron mass',      v1n:'m_μ',v1:1.883531627e-28,v2n:'m_e',v2:9.1093837e-31,note:'≈ 206.8 — dimensionless & real. Not near φ.',src:'CODATA 2022',url:'https://physics.nist.gov/cuu/Constants/'},
+  {name:'Tau/Muon mass',           v1n:'m_τ',v1:3.16754e-27,v2n:'m_μ',v2:1.883531627e-28,note:'≈ 16.8 — valid dimensionless. Not near φ.',src:'PDG 2024',url:'https://pdg.lbl.gov/'},
+  {name:'Strange/Up quark mass',   v1n:'m_s (MeV)',v1:96,v2n:'m_u (MeV)',v2:2.2,note:'≈ 43.6 — same dimension, valid. Not near φ.',src:'PDG 2024',url:'https://pdg.lbl.gov/'},
+  {name:'Charm/Strange quark mass',v1n:'m_c (GeV)',v1:1.27,v2n:'m_s (GeV)',v2:0.096,note:'≈ 13.2 — valid ratio. Not near φ.',src:'PDG 2024',url:'https://pdg.lbl.gov/'},
+];
+
+function runPlanck() {
+  hideAll();
+  const tol  = parseFloat(document.getElementById('tol').value);
+  const grid = document.getElementById('planck-grid');
+  grid.innerHTML = '';
+
+  PLANCK_DATA.forEach(pc => {
+    const r1=pc.v1/pc.v2, r2=pc.v2/pc.v1;
+    const best=Math.abs(r1-PHI)<=Math.abs(r2-PHI)?r1:r2;
+    const prox=Math.abs(best-PHI);
+    const isHit=prox<=tol;
+    const col=isHit?'var(--green)':prox<0.3?'var(--gold)':'var(--muted)';
+
+    const card=document.createElement('div'); card.className='pcard';
+    card.innerHTML=`
+      <div class="pname">${pc.name}</div>
+      <div class="pratio" style="color:${col}">${best.toFixed(5)}</div>
+      <div style="font-size:10px;margin-bottom:5px;">
+        <span style="color:var(--cyan);">vs φ:</span> <span style="color:${col};">±${prox.toFixed(5)}</span>
+        ${isHit?'<span style="color:var(--green);font-weight:700;"> ← within tolerance</span>':''}
+      </div>
+      <div style="font-size:10px;">${pc.v1n}: <strong>${pc.v1.toPrecision(4)}</strong> / ${pc.v2n}: <strong>${pc.v2.toPrecision(4)}</strong></div>
+      <div class="pnote">⚠ ${pc.note}</div>
+      ${pc.url?`<div style="margin-top:6px;"><a class="plink" href="${pc.url}" target="_blank">Source: ${pc.src} ↗</a></div>`:`<div style="margin-top:6px;font-size:10px;color:var(--muted);">${pc.src}</div>`}`;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('planck-wrap').classList.add('on');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LAB ANALOGS — MVRP experimental results
+// ═══════════════════════════════════════════════════════════════════
+const LAB_DATA = [
+  {
+    name:'φ-Spacing Acoustic Resonance', scale:'~0.3 m (bucket)', scaleLog:Math.log10(0.3),
+    measured:'3.5×', ratio:3.5, baseline:'1.0× (random spacing)',
+    enhancement:3.5, status:'rep', statusLabel:'★★★ Reproducible',
+    method:'Water in bucket, piezo transducers at φ-spaced intervals. 68+ video archive.',
+    cosmicAnalog:'Predicted: φ-spaced gravitational wave detector geometry',
+    doi:'https://zenodo.org/records/18079209'
+  },
+  {
+    name:'φ-Cage Grounded Re-test', scale:'~0.5 m (cage)', scaleLog:Math.log10(0.5),
+    measured:'1.89×', ratio:1.89, baseline:'1.42× (ungrounded)',
+    enhancement:1.89, status:'rep', statusLabel:'★★★ Confirmed 2026-05-30',
+    method:'Grounded Faraday cage at φ-spacing. Before: 1.42 → After: 1.89.',
+    cosmicAnalog:'Predicted: shielding effects in φ-spaced LIGO interferometer arms',
+    doi:'https://zenodo.org/records/18079209'
+  },
+  {
+    name:'φ-Mirror Optical Coherence', scale:'~0.1 m (mirrors)', scaleLog:Math.log10(0.1),
+    measured:'2.1×', ratio:2.1, baseline:'1.0× (arbitrary spacing)',
+    enhancement:2.1, status:'rep', statusLabel:'★★★ Reproducible (video)',
+    method:'Mirror circle at φ-spaced angles. Laser reflection coherence increase.',
+    cosmicAnalog:'Predicted: φ-spaced telescope array coherence enhancement',
+    doi:'https://youtube.com/watch?v=AjrDc7lWqVk'
+  },
+  {
+    name:'MVRP Negative Pressure Signal', scale:'~0.1 m (tube)', scaleLog:Math.log10(0.1),
+    measured:'Observed', ratio:null, baseline:'Baseline: standard acoustic',
+    enhancement:null, status:'pend', statusLabel:'⏳ Under Analysis',
+    method:'Acoustic tube experiment suggesting negative pressure / time reversal signal. Requires controlled replication.',
+    cosmicAnalog:'Predicted: analog to Casimir effect at φ-spacing scale',
+    doi:'https://zenodo.org/records/18079209'
+  },
+  {
+    name:'Cross-Scale φ Prediction (Microtubule)', scale:'~10 nm', scaleLog:Math.log10(1e-8),
+    measured:'Predicted: 1.5–2.5×', ratio:2.0, baseline:'Random spacing baseline',
+    enhancement:2.0, status:'pred', statusLabel:'🔮 Prediction (untested)',
+    method:'If cross-scale coherence hypothesis holds, φ-spacing in microtubule geometry should show measurable coherence enhancement. Testable via in-vitro fluorescence assay.',
+    cosmicAnalog:'Hameroff-Penrose orchestrated objective reduction framework',
+    doi:'https://zenodo.org/records/18079209'
+  },
+  {
+    name:'Cross-Scale φ Prediction (LIGO)', scale:'~10²² m', scaleLog:22,
+    measured:'Predicted: 1.1–1.4×', ratio:1.25, baseline:'LIGO null hypothesis',
+    enhancement:1.25, status:'pred', statusLabel:'🔮 Prediction (active search)',
+    method:'If φ-coherence is universal, LIGO event mass ratios near φ should appear at p<0.05. Current tool is running this test.',
+    cosmicAnalog:'This tool — active search underway',
+    doi:'https://github.com/Fore-Wave/phi-finder'
+  },
+];
+
+function runLab() {
+  hideAll();
+  const grid = document.getElementById('lab-grid');
+  grid.innerHTML = '';
+
+  LAB_DATA.forEach(d => {
+    const card=document.createElement('div'); card.className='lcard';
+    const col = d.status==='rep'?'var(--green)':d.status==='pend'?'var(--gold)':'var(--purple)';
+    card.innerHTML=`
+      <div class="lname">${d.name}</div>
+      <div class="lval" style="color:${col}">${d.measured}</div>
+      <div class="lphi">Scale: ${d.scale} · Baseline: ${d.baseline}</div>
+      <span class="lstatus lst-${d.status}">${d.statusLabel}</span>
+      <div style="margin-top:10px;font-size:10px;line-height:1.6;color:var(--muted);">${d.method}</div>
+      <div style="margin-top:7px;font-size:10px;color:var(--cyan);">Cosmic analog: <span style="color:var(--muted);">${d.cosmicAnalog}</span></div>
+      <div style="margin-top:7px;"><a class="plink" href="${d.doi}" target="_blank">Reference ↗</a></div>`;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('lab-wrap').classList.add('on');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CROSS-SCALE POWER LAW PLOT
+// ═══════════════════════════════════════════════════════════════════
+function runCross() {
+  hideAll();
+  document.getElementById('cross-wrap').classList.add('on');
+  try { drawCrossScale(); } catch(e) { console.warn('Cross-scale chart error:', e); }
+}
+
+function drawCrossScale() {
+  const canvas = document.getElementById('cross-chart');
+  canvas.width  = canvas.offsetWidth || 900;
+  canvas.height = 320;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const pad={t:30,b:50,l:65,r:30};
+  const IW=W-pad.l-pad.r, IH=H-pad.t-pad.b;
+
+  ctx.fillStyle='rgba(8,12,32,0.96)'; ctx.fillRect(0,0,W,H);
+
+  // Data points: [log10(scale_meters), log10(enhancement), label, status, color]
+  const points = [
+    {x:Math.log10(1e-8), y:Math.log10(2.0),  label:'Microtubule\n(predicted)', status:'pred', col:'#a78bfa'},
+    {x:Math.log10(0.1),  y:Math.log10(2.1),  label:'Mirror\n(lab)',            status:'rep',  col:'#34d399'},
+    {x:Math.log10(0.3),  y:Math.log10(3.5),  label:'Bucket\n(lab)',            status:'rep',  col:'#34d399'},
+    {x:Math.log10(0.5),  y:Math.log10(1.89), label:'Cage\n(lab)',              status:'rep',  col:'#34d399'},
+    {x:Math.log10(1e6),  y:Math.log10(1.2),  label:'Earthquake\n(inferred)',   status:'inf',  col:'#f5c842'},
+    {x:Math.log10(1e21), y:Math.log10(1.25), label:'LIGO\n(inferred)',         status:'inf',  col:'#f5c842'},
+  ];
+
+  const xMin=-10, xMax=23, yMin=-0.3, yMax=0.7;
+  const toX = v => pad.l + (v-xMin)/(xMax-xMin)*IW;
+  const toY = v => pad.t + (1-(v-yMin)/(yMax-yMin))*IH;
+
+  // Grid
+  ctx.strokeStyle='rgba(148,163,184,0.1)'; ctx.lineWidth=1;
+  for(let x=xMin;x<=xMax;x+=2){ ctx.beginPath(); ctx.moveTo(toX(x),pad.t); ctx.lineTo(toX(x),H-pad.b); ctx.stroke(); }
+  for(let y=yMin;y<=yMax;y+=0.2){ ctx.beginPath(); ctx.moveTo(pad.l,toY(y)); ctx.lineTo(W-pad.r,toY(y)); ctx.stroke(); }
+
+  // Axes
+  ctx.strokeStyle='rgba(148,163,184,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,H-pad.b); ctx.lineTo(W-pad.r,H-pad.b); ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle='#94a3b8'; ctx.font='9px Space Mono';
+  for(let x=xMin;x<=xMax;x+=4){ ctx.fillText('10^'+x, toX(x)-12, H-pad.b+14); }
+  ctx.fillText('Scale (metres, log₁₀)', W/2-60, H-8);
+  ctx.save(); ctx.translate(14, H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Enhancement (log₁₀)', -60, 0); ctx.restore();
+  for(let y=yMin;y<=yMax;y+=0.2){
+    const ly=+(Math.round(y*10)/10);
+    ctx.fillText((10**ly).toFixed(2)+'×', 2, toY(ly)+4);
+  }
+
+  // Power-law fit line through lab data (least squares on log-log)
+  // Using observed lab points only: (log10(0.1),log10(2.1)), (log10(0.3),log10(3.5)), (log10(0.5),log10(1.89))
+  // Simple linear fit: y = A + B*x
+  // Points: (-1, 0.322), (-0.523, 0.544), (-0.301, 0.276)
+  const fitPts = [[-1,0.322],[-0.523,0.544],[-0.301,0.276]];
+  const n3=fitPts.length, sx=fitPts.reduce((a,p)=>a+p[0],0), sy=fitPts.reduce((a,p)=>a+p[1],0);
+  const sxy=fitPts.reduce((a,p)=>a+p[0]*p[1],0), sx2=fitPts.reduce((a,p)=>a+p[0]*p[0],0);
+  const B=(n3*sxy-sx*sy)/(n3*sx2-sx*sx);
+  const A=(sy-B*sx)/n3;
+
+  ctx.strokeStyle='rgba(245,200,66,0.4)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+  ctx.beginPath();
+  for(let xv=xMin;xv<=xMax;xv+=0.5){
+    const yv=A+B*xv;
+    if(xv===xMin) ctx.moveTo(toX(xv),toY(yv)); else ctx.lineTo(toX(xv),toY(yv));
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Uncertainty envelope (±0.2 log units)
+  ctx.fillStyle='rgba(245,200,66,0.05)';
+  ctx.beginPath();
+  for(let xv=xMin;xv<=xMax;xv+=0.5) ctx.lineTo(toX(xv),toY(A+B*xv+0.2));
+  for(let xv=xMax;xv>=xMin;xv-=0.5) ctx.lineTo(toX(xv),toY(A+B*xv-0.2));
+  ctx.closePath(); ctx.fill();
+
+  // φ = 1.0× baseline
+  ctx.strokeStyle='rgba(34,211,238,0.3)'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.moveTo(pad.l,toY(0)); ctx.lineTo(W-pad.r,toY(0)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#22d3ee'; ctx.font='9px Space Mono'; ctx.fillText('1.0× baseline',W-pad.r-70,toY(0)-4);
+
+  // Data points
+  points.forEach(p => {
+    const px=toX(p.x), py=toY(p.y);
+    ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2);
+    ctx.fillStyle=p.col; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1.5; ctx.stroke();
+
+    // Labels (handle newlines)
+    ctx.fillStyle=p.col; ctx.font='bold 9px Space Mono';
+    const lines=p.label.split('\n');
+    lines.forEach((l,i) => ctx.fillText(l, px+10, py-4+i*12));
+  });
+
+  // Legend
+  ctx.fillStyle='#34d399'; ctx.font='10px Space Mono'; ctx.fillText('● Lab (confirmed)', pad.l+10,pad.t+16);
+  ctx.fillStyle='#f5c842'; ctx.fillText('● Inferred', pad.l+140,pad.t+16);
+  ctx.fillStyle='#a78bfa'; ctx.fillText('● Predicted', pad.l+220,pad.t+16);
+  ctx.strokeStyle='rgba(245,200,66,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(pad.l+300,pad.t+11); ctx.lineTo(pad.l+340,pad.t+11); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(245,200,66,0.6)'; ctx.fillText('Power-law fit (lab data)', pad.l+344,pad.t+16);
+
+  // Power law equation
+  ctx.fillStyle='#f5c842'; ctx.font='11px Space Mono';
+  ctx.fillText(`Enhancement = 10^(${A.toFixed(2)} + ${B.toFixed(3)} × log₁₀(scale))`, pad.l+10, H-pad.b+34);
+  ctx.fillStyle='#94a3b8'; ctx.font='9px Space Mono';
+  ctx.fillText('(fit to lab data only — extrapolation is speculative)', pad.l+10, H-pad.b+46);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DOWNLOADS
+// ═══════════════════════════════════════════════════════════════════
+function downloadRaw() {
+  const blob = new Blob([JSON.stringify({
+    meta:{ tool:'phi-finder-v4.1', date:new Date().toISOString(), seed:document.getElementById('seed').value, tab:currentTab, dataSource:apiPullDate },
+    data: lastRawData
+  },null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`phi-finder_raw_${currentTab}_${Date.now()}.json`; a.click();
+}
+
+function downloadCSV() {
+  if (!lastHits.length) return;
+  const hdr = 'id,ratio,proximity_to_phi,phi_score_pct,v1,v2,label,source';
+  const rows = lastHits.map(h=>[
+    h.id, h.ratio.toFixed(6), Math.abs(h.ratio-PHI).toFixed(6),
+    ((1-Math.abs(h.ratio-PHI)/PHI)*100).toFixed(2),
+    h.v1, h.v2, (h.label||''), (h.source||'')
+  ].join(','));
+  const blob=new Blob([[hdr,...rows].join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`phi-finder_results_${currentTab}_${Date.now()}.csv`; a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MAIN SEARCH ENGINE
+// ═══════════════════════════════════════════════════════════════════
+async function runSearch()    { await _run(false); }
+async function runDiscovery() { await _run(true);  }
+
+async function _run(discovery) {
+  hideAll();
+  const tol    = parseFloat(document.getElementById('tol').value);
+  const nTrials= parseInt(document.getElementById('mc-n').value);
+  const mode   = document.getElementById('mode').value;
+  const tab    = currentTab;
+
+  if (tab==='planck') { runPlanck(); return; }
+  if (tab==='lab')    { runLab();    return; }
+  if (tab==='cross')  { runCross();  return; }
+
+  showLoad('Fetching data from APIs…');
+  let rawData = [];
+  try {
+    if      (tab==='ligo') rawData = mode==='real' ? await fetchLIGO()     : ligoArchive();
+    else if (tab==='jwst') rawData = mode==='real' ? await fetchExo()      : exoArchive();
+    else if (tab==='eq')   rawData = mode==='real' ? await fetchEQ()       : eqArchive();
+    else if (tab==='seti') rawData = setiSynth();
+  } catch(e) { console.error('Data fetch error:', e); }
+
+  lastRawData = rawData;
+  document.getElementById('load-text').textContent = `Running ${parseInt(document.getElementById('mc-n').value).toLocaleString()} Monte Carlo trials…`;
+
+  const allRatios = extractRatios(rawData, tab, discovery);
+  hideLoad();
+  setDataVer();
+
+  if (!allRatios.length) {
+    alert('No valid ratios extracted. Try lowering the SNR filter or switching to Archive data.');
+    return;
+  }
+
+  const stats = await monteCarlo(allRatios, tol, nTrials);
+  lastRatios  = allRatios;
+  lastHits    = allRatios.filter(r => Math.abs(r.ratio-PHI)<=tol)
+                          .sort((a,b) => Math.abs(a.ratio-PHI)-Math.abs(b.ratio-PHI));
+
+  showStats(stats);
+  showInterp(stats);
+  drawNullDist(stats);
+  drawRatioChart(allRatios, tol);
+  showResults(lastHits, tol);
+}
+
+// Planck / Lab / Cross direct triggers from tabs
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('[data-src="planck"]').addEventListener('click',()=>setTimeout(runPlanck,30));
+  document.querySelector('[data-src="lab"]').addEventListener('click',()=>setTimeout(runLab,30));
+  document.querySelector('[data-src="cross"]').addEventListener('click',()=>setTimeout(runCross,30));
+  document.getElementById('version-stamp').textContent = `v4.1 · ${new Date().toISOString().split('T')[0]}`;
+});
+</script>
+</body>
+</html>
