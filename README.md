@@ -1,7 +1,7 @@
 # φ-Finder: Cross-Scale Golden Ratio Analysis Tool [Version 4.1]
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Live Demo](https://img.shields.io/badge/Demo-Live-blue.svg)](https://phi-finder.netlify.app/)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-blue.svg)](**[phi-finder-v41.netlify.app](https://phi-finder-v41.netlify.app/)**)
 [![Zenodo](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.18167536-blue.svg)](https://zenodo.org/records/18079209)
 
 **Testing whether golden ratio (φ ≈ 1.618) patterns appear in natural systems beyond random chance.**
@@ -10,7 +10,7 @@
 
 ## 🌟 Live Tool
 
-**👉 [Try φ-Finder v4.1 Live](https://phi-finder-v41.netlify.app/)**
+**👉 [phi-finder-v41.netlify.app](https://phi-finder-v41.netlify.app/)**
 
 Open-source web application for analyzing φ-patterns across:
 - 🌌 LIGO Gravitational Waves
@@ -250,7 +250,7 @@ The tool is freely available under CC-BY 4.0.
 ## 🌍 Links & Resources
 
 ### Primary
-- **Live Tool:** [phi-finder.netlify.app]((https://phi-finder-v41.netlify.app/))
+- **Live Tool:** [phi-finder-v41.netlify.app](https://phi-finder-v41.netlify.app/)
 - **Zenodo Archive:** [DOI 10.5281/zenodo.18167536](https://zenodo.org/records/18079209)
 - **GitHub Repository:** [github.com/Fore-Wave/phi-finder](https://github.com/Fore-Wave/phi-finder)
 
@@ -315,6 +315,15 @@ We welcome contributions! Please:
 
 ## 📝 Version History
 
+### v4.1 (Current — May 2026)
+- ✅ Real API integration (LIGO GWOSC, USGS, NASA Exoplanet Archive)
+- ✅ Seeded Monte Carlo with null distribution histogram
+- ✅ p-value, z-score, 95% CI
+- ✅ Lab Analogs tab (MVRP experimental data)
+- ✅ Cross-Scale power law visualization
+- ✅ Raw data + CSV export
+- ✅ Dark/light mode
+
 **v3.0** (March 2026) - Research grade release  
 - Four datasets (LIGO, JWST, SETI, Earthquake)
 - Discovery mode
@@ -329,6 +338,14 @@ We welcome contributions! Please:
 **v1.0** (January 2026) - Initial prototype  
 - LIGO dataset only
 - Proof of concept
+
+
+### v5.0 (Vision)
+- [ ] User dataset upload (CSV, JSON)
+- [ ] Temporal clustering / time-series mode
+- [ ] Community-submitted observations
+- [ ] Integration with MVRP lab data pipeline
+
 
 ---
 
