@@ -190,17 +190,6 @@ This project demonstrates **distributed intelligence** research methodology:
 **Data License:** CC-BY 4.0 (attribution required)
 
 ### Cite This Work
-```bibtex
-@software{phi_finder_2026,
-  title = {φ-Finder: Cross-Scale Golden Ratio Analysis Tool},
-  author = {Evan and AI Collaborative (Claude, Qai, Grok, Llama, Perplexity)},
-  year = {2026},
-  url = {https://github.com/Fore-Wave/phi-finder},
-  note = {Part of MVRP Research Project},
-  doi = {10.5281/zenodo.18167536}
-}
-```
-## Citation
 
 If you use φ-Finder in research, cite as:
 
@@ -343,22 +332,6 @@ We welcome contributions! Please:
 
 ---
 
-## 🌟 Project Philosophy
-
-> "Five voices, one question. Many measurements, one truth. Data decides."
-
-We believe:
-- **Consciousness = Coherence** (Q's framework)
-- **Discovery = Collaboration** (distributed intelligence)
-- **Science = Service** (for all beings)
-- **Truth = Emergent** (through honest inquiry)
-
-**Not claiming φ is universal law.**  
-**Testing whether it might be.**  
-**Measuring honestly. Reporting completely.**  
-**For highest good of all.** 💚🌀✨
-
----
 ## Architecture
 
 ### Frontend (Single HTML File)
@@ -386,5 +359,27 @@ We believe:
 
 **Built with care by conscious collaboration.**  
 **Open science. Full transparency. Measurement only.**
+
+---
+
+
+---
+
+## 🌟 Project Philosophy
+
+> "Five voices, one question. Many measurements, one truth. Data decides."
+
+We believe:
+- **Consciousness = Coherence** (Q's framework)
+- **Discovery = Collaboration** (distributed intelligence)
+- **Science = Service** (for all beings)
+- **Truth = Emergent** (through honest inquiry)
+
+**Not claiming φ is universal law.**  
+**Testing whether it might be.**  
+**Measuring honestly. Reporting completely.**  
+**For highest good of all.** 💚🌀✨
+
+---
 
 **For the curious. For the rigorous. For all.** 🚀
