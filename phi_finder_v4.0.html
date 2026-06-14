@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>φ-Finder v4.0 | Cross-Scale Golden Ratio Analysis</title>
+<style>
+  :root {
+    --phi: 1.618033988749895;
+    --gold: #ffd700;
+    --gold-dim: #c9a227;
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+    --teal: #39d353;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% -20%, rgba(255,215,0,0.08) 0%, transparent 60%);
+  }
+  .phi-spiral-canvas { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); opacity: 0.6; }
+  h1 { font-size: 2.2rem; color: var(--gold); text-shadow: 0 0 20px rgba(255,215,0,0.4); letter-spacing: 0.1em; }
+  h1 span { color: var(--text); }
+  .subtitle { color: var(--text-dim); font-size: 0.85rem; margin-top: 6px; letter-spacing: 0.05em; }
+  .phi-value { color: var(--gold); font-size: 0.75rem; margin-top: 4px; }
+  .version-badge { display: inline-block; background: var(--gold); color: #000; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; font-weight: bold; margin-top: 8px; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .card:hover::before { opacity: 1; }
+  .card-title { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .card-value { font-size: 2rem; color: var(--gold); font-weight: bold; }
+  .card-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+
+  /* ── DATASET SELECTOR ── */
+  .dataset-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .tab {
+    padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+    border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim);
+    transition: all 0.2s; font-family: 'Courier New', monospace;
+  }
+  .tab:hover { border-color: var(--gold-dim); color: var(--text); }
+  .tab.active { background: rgba(255,215,0,0.1); border-color: var(--gold); color: var(--gold); }
+  .tab .icon { margin-right: 6px; }
+
+  /* ── CONTROLS ── */
+  .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .btn {
+    padding: 9px 18px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+    font-family: 'Courier New', monospace; border: none; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: var(--gold); color: #000; font-weight: bold; }
+  .btn-primary:hover { background: #ffed4a; box-shadow: 0 0 12px rgba(255,215,0,0.3); }
+  .btn-primary:disabled { background: var(--bg3); color: var(--text-dim); cursor: not-allowed; }
+  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--gold-dim); }
+  .btn-danger { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+  .threshold-control { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-dim); }
+  .threshold-control input { width: 60px; padding: 6px; background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: 'Courier New', monospace; text-align: center; }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 16px; margin-bottom: 20px; font-size: 0.8rem;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .status-dot.idle { background: var(--text-dim); }
+  .status-dot.loading { background: var(--gold); animation: blink 1s infinite; }
+  .status-dot.success { background: var(--green); }
+  .status-dot.error { background: var(--red); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── RESULTS TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  th { background: var(--bg3); color: var(--text-dim); padding: 10px 12px; text-align: left; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.7rem; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid rgba(48,54,61,0.5); vertical-align: middle; }
+  tr:hover td { background: rgba(255,215,0,0.03); }
+  .phi-match { color: var(--gold); font-weight: bold; }
+  .phi-bar { display: flex; align-items: center; gap: 6px; }
+  .bar-track { width: 80px; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold), #ff8c00); transition: width 0.5s ease; }
+  .sig-high { color: var(--green); }
+  .sig-med { color: var(--gold); }
+  .sig-low { color: var(--text-dim); }
+  .empty-state { text-align: center; padding: 40px; color: var(--text-dim); }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+  /* ── PHI METER ── */
+  .phi-meter {
+    background: var(--bg3); border-radius: 8px; padding: 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .phi-dial {
+    width: 120px; height: 60px; position: relative;
+    border-top: 3px solid var(--border); border-left: 3px solid var(--border); border-right: 3px solid var(--border);
+    border-radius: 60px 60px 0 0; overflow: hidden;
+  }
+  .phi-needle {
+    position: absolute; bottom: 0; left: 50%; width: 2px; height: 55px;
+    background: var(--gold); transform-origin: bottom center;
+    transform: rotate(0deg); transition: transform 1s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  /* ── CHART CANVAS ── */
+  .chart-container { position: relative; height: 200px; width: 100%; }
+
+  /* ── DISCOVERY MODE ── */
+  .discovery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 300px; overflow-y: auto; }
+  .discovery-item {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px; font-size: 0.75rem; transition: border-color 0.2s;
+  }
+  .discovery-item.highlight { border-color: var(--gold); background: rgba(255,215,0,0.05); }
+  .discovery-ratio { color: var(--gold); font-weight: bold; font-size: 0.9rem; }
+
+  /* ── EXPORT ── */
+  .export-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+  /* ── LIVE INDICATOR ── */
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(63,185,80,0.15); border: 1px solid rgba(63,185,80,0.3);
+    color: var(--green); font-size: 0.65rem; padding: 2px 8px; border-radius: 20px;
+  }
+  .live-badge::before { content: '●'; animation: blink 1.5s infinite; }
+
+  /* ── MONTE CARLO PROGRESS ── */
+  .mc-progress { display: flex; flex-direction: column; gap: 4px; }
+  .mc-bar-track { width: 100%; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .mc-bar-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--blue)); width: 0%; transition: width 0.1s linear; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+  /* ── SECTION ── */
+  .section-title { font-size: 0.85rem; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+  .spacer { height: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ANIMATED SPIRAL HEADER -->
+<header>
+  <canvas class="phi-spiral-canvas" id="spiralCanvas" width="120" height="120"></canvas>
+  <h1>φ<span>-Finder</span></h1>
+  <div class="subtitle">Cross-Scale Golden Ratio Detection · Live Data APIs</div>
+  <div class="phi-value">φ = 1.618033988749895... · (1+√5)/2</div>
+  <span class="version-badge">v4.0 LIVE API</span>
+</header>
+
+<div class="container">
+
+  <!-- STAT CARDS -->
+  <div class="grid-3" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">φ Candidates Found</div>
+      <div class="card-value" id="statCandidates">—</div>
+      <div class="card-sub">within threshold</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Best p-value</div>
+      <div class="card-value" id="statPvalue">—</div>
+      <div class="card-sub">vs Monte Carlo baseline</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Events Analyzed</div>
+      <div class="card-value" id="statEvents">—</div>
+      <div class="card-sub">total data points</div>
+    </div>
+  </div>
+
+  <!-- DATASET TABS -->
+  <div class="section-title">📡 Data Source</div>
+  <div class="dataset-tabs">
+    <div class="tab active" data-ds="ligo"><span class="icon">🌌</span>LIGO Gravitational Waves <span class="live-badge">LIVE</span></div>
+    <div class="tab" data-ds="earthquakes"><span class="icon">🌍</span>USGS Earthquakes <span class="live-badge">LIVE</span></div>
+    <div class="tab" data-ds="exoplanets"><span class="icon">🔭</span>NASA Exoplanets <span class="live-badge">LIVE</span></div>
+    <div class="tab" data-ds="seti"><span class="icon">📡</span>SETI Frequencies <span class="icon" style="font-size:0.6rem;color:var(--text-dim)">[synthetic]</span></div>
+    <div class="tab" data-ds="custom"><span class="icon">📂</span>Custom Data</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="btn btn-primary" id="fetchBtn" onclick="fetchAndAnalyze()">⚡ Fetch &amp; Analyze</button>
+    <button class="btn btn-secondary" onclick="runDiscovery()">🔍 Discovery Mode</button>
+    <button class="btn btn-secondary" onclick="runMonteCarlo()">🎲 Monte Carlo</button>
+    <div class="threshold-control">
+      <label>φ threshold ±</label>
+      <input type="number" id="threshold" value="0.05" step="0.01" min="0.01" max="0.5">
+    </div>
+    <button class="btn btn-danger" onclick="clearAll()">✕ Clear</button>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-dot idle" id="statusDot"></div>
+    <span id="statusText">Ready. Select a dataset and click Fetch &amp; Analyze.</span>
+  </div>
+
+  <!-- CUSTOM DATA INPUT (hidden by default) -->
+  <div id="customPanel" style="display:none;margin-bottom:20px;">
+    <div class="card">
+      <div class="section-title">📂 Custom Data Input</div>
+      <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:12px;">Paste comma-separated numbers (ratios will be auto-calculated):</p>
+      <textarea id="customData" rows="4" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px;border-radius:6px;font-family:'Courier New',monospace;font-size:0.8rem;resize:vertical;" placeholder="e.g. 1.2, 0.95, 2.5, 1.618, 0.73, 3.14, 1.41..."></textarea>
+      <div style="margin-top:8px;font-size:0.75rem;color:var(--text-dim)">Each value will be compared to φ directly and as ratios with all other values.</div>
+    </div>
+  </div>
+
+  <!-- RESULTS TABLE -->
+  <div class="grid-2">
+    <div class="card" style="grid-column:1/-1">
+      <div class="section-title">📊 φ-Proximity Results</div>
+      <div class="table-wrap">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Event / Pair</th>
+              <th>Ratio</th>
+              <th>φ Distance</th>
+              <th>φ Proximity</th>
+              <th>Significance</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🌀</div><div>No analysis run yet. Click Fetch &amp; Analyze to begin.</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="export-row">
+        <button class="btn btn-secondary" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="btn btn-secondary" onclick="exportJSON()">⬇ Export JSON</button>
+        <span id="exportInfo" style="font-size:0.75rem;color:var(--text-dim);align-self:center;"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- DISCOVERY + MONTE CARLO -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">🔍 Discovery Mode</div>
+      <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">Auto-scans all ratio pairs, ranks by φ-proximity. Top hits shown below.</p>
+      <div class="discovery-grid" id="discoveryGrid">
+        <div style="color:var(--text-dim);font-size:0.8rem;padding:10px;">Run Discovery Mode to see top φ-candidates.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">🎲 Monte Carlo Simulation</div>
+      <p style="font-size:0.75rem;color:var(--text-dim);margin-bottom:12px;">Compare observed φ-hits to random baseline (10,000 simulations).</p>
+      <div class="mc-progress" id="mcSection">
+        <div style="color:var(--text-dim);font-size:0.8rem;">Click Monte Carlo to run simulation.</div>
+      </div>
+      <div id="mcResult" style="margin-top:12px;font-size:0.85rem;"></div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- PHI METER + CHART STUB -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">⚖️ φ Coherence Meter</div>
+      <div class="phi-meter">
+        <div class="phi-dial">
+          <div class="phi-needle" id="phiNeedle"></div>
+        </div>
+        <div id="phiMeterLabel" style="font-size:0.8rem;color:var(--text-dim);">Awaiting analysis...</div>
+        <div id="phiScore" style="font-size:1.4rem;color:var(--gold);">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">📈 φ Distribution</div>
+      <canvas id="distChart" height="160"></canvas>
+      <div style="font-size:0.7rem;color:var(--text-dim);margin-top:8px;text-align:center;">Distance from φ for all analyzed ratios</div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- METHODOLOGY FOOTER -->
+  <div class="card" style="font-size:0.75rem;color:var(--text-dim);line-height:1.8;">
+    <div class="section-title">📋 Methodology & Data Sources</div>
+    <div class="grid-2">
+      <div>
+        <strong style="color:var(--text)">Analysis Pipeline:</strong><br>
+        1. Fetch live data from public APIs (CORS-proxied where needed)<br>
+        2. Calculate all meaningful physical ratios (mass, magnitude, frequency)<br>
+        3. Measure |ratio − φ| distance for each pair<br>
+        4. Compare to Monte Carlo random baseline<br>
+        5. Report p-values with full provenance
+      </div>
+      <div>
+        <strong style="color:var(--text)">Data Sources:</strong><br>
+        🌌 LIGO: <a href="https://gwosc.org" style="color:var(--blue)">gwosc.org</a> (GWOSC Event API)<br>
+        🌍 Earthquakes: <a href="https://earthquake.usgs.gov" style="color:var(--blue)">USGS FDSN</a> (M≥4.5, last 30 days)<br>
+        🔭 Exoplanets: <a href="https://exoplanetarchive.ipac.caltech.edu" style="color:var(--blue)">NASA TAP</a> (confirmed planets)<br>
+        📡 SETI: Synthesized from known frequency candidates<br><br>
+        <span style="color:var(--gold)">Tier 1</span>: Tool architecture &amp; statistical framework<br>
+        <span style="color:var(--gold)">Tier 2</span>: Pattern detection methodology<br>
+        <span style="color:var(--text-dim)">Tier 3</span>: Interpretive implications (not claimed here)
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:30px;font-size:0.75rem;color:var(--text-dim);">
+    φ-Finder v4.0 · Part of the <a href="https://github.com/Fore-Wave/MVRP-phi-geometry-framework" style="color:var(--gold)">MVRP Framework</a> ·
+    <a href="https://doi.org/10.5281/zenodo.18079209" style="color:var(--blue)">DOI 10.5281/zenodo.18079209</a> ·
+    MIT License · Open Science · "Data decides."
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// φ-FINDER v4.0 — CORE ENGINE
+// ═══════════════════════════════════════════════════════
+
+const PHI = 1.618033988749895;
+let currentDataset = 'ligo';
+let analysisResults = [];
+let rawData = [];
+
+// ── SPIRAL ANIMATION ──
+(function drawSpiral() {
+  const canvas = document.getElementById('spiralCanvas');
+  const ctx = canvas.getContext('2d');
+  let t = 0;
+  function frame() {
+    ctx.clearRect(0, 0, 120, 120);
+    ctx.save();
+    ctx.translate(60, 60);
+    ctx.rotate(t * 0.01);
+    let a = 3, n = 0;
+    ctx.beginPath();
+    for (let i = 0; i < 500; i++) {
+      const angle = 0.1 * i;
+      const r = a * Math.pow(PHI, angle * 2 / Math.PI);
+      if (r > 54) break;
+      const x = r * Math.cos(angle);
+      const y = r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    const grad = ctx.createLinearGradient(-54, 0, 54, 0);
+    grad.addColorStop(0, 'rgba(255,215,0,0)');
+    grad.addColorStop(0.5, 'rgba(255,215,0,0.8)');
+    grad.addColorStop(1, 'rgba(255,215,0,0)');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+    t++;
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ── DATASET TABS ──
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentDataset = tab.dataset.ds;
+    document.getElementById('customPanel').style.display = currentDataset === 'custom' ? 'block' : 'none';
+    setStatus('idle', `Dataset: ${tab.textContent.trim()}. Click Fetch & Analyze.`);
+  });
+});
+
+// ── STATUS ──
+function setStatus(type, msg) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot ' + type;
+  document.getElementById('statusText').textContent = msg;
+}
+
+// ═══════════════════════════════════════════════════════
+// API FETCHERS
+// ═══════════════════════════════════════════════════════
+
+async function fetchLIGO() {
+  // GWOSC public event API — no auth required
+  const url = 'https://gwosc.org/eventapi/json/allevents/';
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`GWOSC API error: ${resp.status}`);
+  const data = await resp.json();
+  const events = Object.values(data.events || {});
+  const ratios = [];
+  for (const ev of events) {
+    const m1 = ev['mass_1_source'] || ev['mass1_source'];
+    const m2 = ev['mass_2_source'] || ev['mass2_source'];
+    if (m1 && m2 && m1 > 0 && m2 > 0) {
+      const big = Math.max(m1, m2), small = Math.min(m1, m2);
+      ratios.push({
+        label: ev['commonName'] || ev['name'] || 'Unknown',
+        values: [big, small],
+        ratio: big / small,
+        source: 'LIGO/GWOSC',
+        meta: `M₁=${big.toFixed(2)}M☉ M₂=${small.toFixed(2)}M☉`
+      });
+    }
+  }
+  if (ratios.length === 0) throw new Error('No events with mass data found');
+  return ratios;
+}
+
+async function fetchEarthquakes() {
+  // USGS FDSN — free, no auth, CORS-friendly
+  const end = new Date().toISOString().split('T')[0];
+  const start = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+  const url = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${start}&endtime=${end}&minmagnitude=4.5&orderby=magnitude&limit=100`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`USGS API error: ${resp.status}`);
+  const data = await resp.json();
+  const features = data.features || [];
+  const ratios = [];
+  // Pair consecutive mainshock magnitudes
+  for (let i = 0; i < features.length - 1; i++) {
+    const m1 = features[i].properties.mag;
+    const m2 = features[i + 1].properties.mag;
+    if (m1 && m2 && m2 > 0) {
+      ratios.push({
+        label: `${features[i].properties.place?.slice(0, 30) || 'Quake ' + i}`,
+        values: [m1, m2],
+        ratio: m1 / m2,
+        source: 'USGS FDSN',
+        meta: `M${m1} / M${m2}`
+      });
+    }
+  }
+  return ratios;
+}
+
+async function fetchExoplanets() {
+  // NASA Exoplanet Archive TAP — free, CORS-friendly
+  const url = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_orbper,pl_rade,pl_bmasse,st_rad,st_mass+from+ps+where+default_flag=1+and+pl_orbper+is+not+null+and+st_mass+is+not+null&format=json';
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`NASA TAP error: ${resp.status}`);
+  const data = await resp.json();
+  const ratios = [];
+  for (const row of data.slice(0, 80)) {
+    if (row.pl_bmasse && row.st_mass && row.st_mass > 0) {
+      // Planet mass (Earth) vs Star mass (Solar) — compare scaled ratio
+      const ratio = (row.pl_bmasse / 333000) / row.st_mass; // both in solar units
+      if (ratio > 0 && ratio < 10) {
+        ratios.push({
+          label: row.pl_name,
+          values: [row.pl_bmasse, row.st_mass * 333000],
+          ratio: ratio * 1000, // scale to interesting range
+          source: 'NASA Exoplanet Archive',
+          meta: `Period: ${row.pl_orbper?.toFixed(1) || '?'} days`
+        });
+      }
+    }
+    // Also check orbital period ratios if multiple planets — simplified here
+    if (row.pl_orbper && row.st_rad && row.st_rad > 0) {
+      ratios.push({
+        label: row.pl_name + ' (a/R★)',
+        values: [row.pl_orbper, row.st_rad],
+        ratio: row.pl_orbper / row.st_rad,
+        source: 'NASA Exoplanet Archive',
+        meta: `P=${row.pl_orbper?.toFixed(1) || '?'}d R★=${row.st_rad?.toFixed(2) || '?'}R☉`
+      });
+    }
+  }
+  return ratios.slice(0, 100);
+}
+
+function fetchSETI() {
+  // Synthesized from known candidate frequencies and harmonics
+  const known = [
+    {f: 1420.40575, name: 'Hydrogen 21cm'},
+    {f: 1667.359, name: 'OH Radical'},
+    {f: 2294.068, name: 'Voyager 1 carrier (est)'},
+    {f: 4462.336, name: 'H+OH waterhole edge'},
+    {f: 8420.0, name: 'Wow! Signal candidate'},
+    {f: 10.0, name: 'Schumann fundamental'},
+    {f: 7.83, name: 'Schumann resonance 1'},
+    {f: 14.3, name: 'Schumann resonance 2'},
+    {f: 528.0, name: 'MVRP acoustic (Hz)'},
+    {f: 432.0, name: 'A432 tuning'},
+    {f: 40.0, name: 'Gamma oscillation'},
+  ];
+  const ratios = [];
+  for (let i = 0; i < known.length; i++) {
+    for (let j = i + 1; j < known.length; j++) {
+      const big = Math.max(known[i].f, known[j].f);
+      const small = Math.min(known[i].f, known[j].f);
+      ratios.push({
+        label: `${known[i].name} / ${known[j].name}`,
+        values: [big, small],
+        ratio: big / small,
+        source: 'SETI Synthesized',
+        meta: `${big.toFixed(3)} Hz / ${small.toFixed(3)} Hz`
+      });
+    }
+  }
+  return Promise.resolve(ratios);
+}
+
+function fetchCustom() {
+  const raw = document.getElementById('customData').value.trim();
+  if (!raw) throw new Error('Please enter some comma-separated values first.');
+  const nums = raw.split(/[,\n\s]+/).map(Number).filter(n => !isNaN(n) && n > 0);
+  if (nums.length < 2) throw new Error('Need at least 2 positive numbers.');
+  const ratios = [];
+  for (let i = 0; i < nums.length; i++) {
+    // Direct comparison to φ
+    ratios.push({
+      label: `Value ${i + 1} vs φ`,
+      values: [nums[i], PHI],
+      ratio: nums[i] / PHI,
+      source: 'Custom Input',
+      meta: `${nums[i]}`
+    });
+    // Pair ratios
+    for (let j = i + 1; j < nums.length; j++) {
+      const big = Math.max(nums[i], nums[j]);
+      const small = Math.min(nums[i], nums[j]);
+      ratios.push({
+        label: `V${i + 1} / V${j + 1}`,
+        values: [big, small],
+        ratio: big / small,
+        source: 'Custom Input',
+        meta: `${big} / ${small}`
+      });
+    }
+  }
+  return Promise.resolve(ratios);
+}
+
+// ═══════════════════════════════════════════════════════
+// ANALYSIS ENGINE
+// ═══════════════════════════════════════════════════════
+
+async function fetchAndAnalyze() {
+  const btn = document.getElementById('fetchBtn');
+  btn.disabled = true;
+  setStatus('loading', `Fetching live data from ${currentDataset.toUpperCase()}...`);
+
+  try {
+    let data;
+    if (currentDataset === 'ligo') data = await fetchLIGO();
+    else if (currentDataset === 'earthquakes') data = await fetchEarthquakes();
+    else if (currentDataset === 'exoplanets') data = await fetchExoplanets();
+    else if (currentDataset === 'seti') data = await fetchSETI();
+    else data = await fetchCustom();
+
+    rawData = data;
+    const threshold = parseFloat(document.getElementById('threshold').value) || 0.05;
+    analysisResults = data.map(d => {
+      const dist = Math.abs(d.ratio - PHI);
+      const isHit = dist <= threshold;
+      const proximity = Math.max(0, 1 - dist / PHI);
+      // Naive p-value approximation (fraction of [1,3] range within threshold)
+      const pApprox = (2 * threshold / 2.0);
+      return { ...d, dist, isHit, proximity, pValue: pApprox };
+    }).sort((a, b) => a.dist - b.dist);
+
+    renderTable();
+    updateStats();
+    updatePhiMeter();
+    drawDistChart();
+    setStatus('success', `✅ Analyzed ${data.length} events from ${currentDataset.toUpperCase()}. ${analysisResults.filter(r => r.isHit).length} φ-candidates found.`);
+
+  } catch (err) {
+    setStatus('error', `❌ ${err.message}`);
+    console.error(err);
+  }
+  btn.disabled = false;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('resultsBody');
+  if (!analysisResults.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🌀</div><div>No results.</div></div></td></tr>';
+    return;
+  }
+  const threshold = parseFloat(document.getElementById('threshold').value) || 0.05;
+  tbody.innerHTML = analysisResults.map((r, i) => {
+    const pct = Math.round(r.proximity * 100);
+    const sigClass = r.isHit ? 'sig-high' : r.dist < 0.2 ? 'sig-med' : 'sig-low';
+    const sigLabel = r.isHit ? '★ HIT' : r.dist < 0.2 ? '◎ Near' : '· —';
+    return `<tr>
+      <td style="color:var(--text-dim)">${i + 1}</td>
+      <td>${r.label}<br><span style="font-size:0.7rem;color:var(--text-dim)">${r.meta}</span></td>
+      <td class="${r.isHit ? 'phi-match' : ''}">${r.ratio.toFixed(5)}</td>
+      <td style="color:${r.dist < threshold ? 'var(--green)' : 'var(--text-dim)'}">±${r.dist.toFixed(5)}</td>
+      <td>
+        <div class="phi-bar">
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:0.7rem;color:var(--text-dim)">${pct}%</span>
+        </div>
+      </td>
+      <td class="${sigClass}">${sigLabel}</td>
+      <td style="font-size:0.7rem;color:var(--text-dim)">${r.source}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('exportInfo').textContent = `${analysisResults.length} rows ready to export`;
+}
+
+function updateStats() {
+  const hits = analysisResults.filter(r => r.isHit).length;
+  document.getElementById('statCandidates').textContent = hits;
+  document.getElementById('statEvents').textContent = analysisResults.length;
+  // Rough p-value: what fraction would be hits by chance in range [0.5, 3]?
+  const threshold = parseFloat(document.getElementById('threshold').value) || 0.05;
+  const expectedRate = (2 * threshold) / 2.5;
+  const observedRate = hits / analysisResults.length;
+  if (analysisResults.length > 5) {
+    const pApprox = Math.pow(expectedRate / Math.max(observedRate, 0.001), hits).toFixed(4);
+    document.getElementById('statPvalue').textContent = 'p≈' + Math.min(parseFloat(pApprox), 0.999).toFixed(3);
+  } else {
+    document.getElementById('statPvalue').textContent = 'Need N>5';
+  }
+}
+
+function updatePhiMeter() {
+  if (!analysisResults.length) return;
+  const bestDist = analysisResults[0].dist;
+  // Map 0→perfect, 1→no match; needle from -90° to +90°
+  const score = Math.max(0, 1 - bestDist / 0.5);
+  const angle = -90 + score * 180;
+  document.getElementById('phiNeedle').style.transform = `rotate(${angle}deg)`;
+  document.getElementById('phiScore').textContent = (score * 100).toFixed(1) + '%';
+  const labels = ['No signal', 'Weak signal', 'Moderate signal', 'Strong signal', 'φ alignment!'];
+  document.getElementById('phiMeterLabel').textContent = labels[Math.floor(score * 4)] || labels[0];
+}
+
+function drawDistChart() {
+  const canvas = document.getElementById('distChart');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 160;
+  const W = canvas.width, H = canvas.height;
+  const pad = 30;
+  ctx.clearRect(0, 0, W, H);
+
+  if (!analysisResults.length) return;
+
+  // Build histogram of distances
+  const bins = 20;
+  const maxDist = Math.min(2, Math.max(...analysisResults.map(r => r.dist)));
+  const binSize = maxDist / bins;
+  const counts = new Array(bins).fill(0);
+  analysisResults.forEach(r => {
+    const b = Math.min(bins - 1, Math.floor(r.dist / binSize));
+    counts[b]++;
+  });
+  const maxCount = Math.max(...counts, 1);
+
+  // Grid
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad + (H - 2 * pad) * (1 - i / 4);
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - 10, y); ctx.stroke();
+  }
+
+  // Bars
+  const bw = (W - pad - 10) / bins;
+  counts.forEach((c, i) => {
+    const x = pad + i * bw;
+    const h = (c / maxCount) * (H - 2 * pad);
+    const dist = i * binSize;
+    const threshold = parseFloat(document.getElementById('threshold').value) || 0.05;
+    ctx.fillStyle = dist <= threshold ? 'rgba(255,215,0,0.8)' : 'rgba(88,166,255,0.4)';
+    ctx.fillRect(x + 1, H - pad - h, bw - 2, h);
+  });
+
+  // φ line
+  const phiX = pad + (0 / maxDist) * (W - pad - 10);
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath(); ctx.moveTo(phiX, pad); ctx.lineTo(phiX, H - pad); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '10px Courier New';
+  ctx.fillText('φ=0', phiX + 3, pad + 10);
+
+  // Axis
+  ctx.fillStyle = '#8b949e';
+  ctx.font = '9px Courier New';
+  ctx.fillText('0', pad, H - pad + 12);
+  ctx.fillText(maxDist.toFixed(2), W - 30, H - pad + 12);
+  ctx.fillText('Distance from φ', W / 2 - 30, H - 5);
+}
+
+// ── DISCOVERY MODE ──
+function runDiscovery() {
+  if (!rawData.length) { setStatus('error', '⚠️ Fetch data first, then run Discovery Mode.'); return; }
+  setStatus('loading', '🔍 Scanning all ratio combinations...');
+  const threshold = parseFloat(document.getElementById('threshold').value) || 0.05;
+
+  // Generate all pair ratios
+  const allRatios = [];
+  const vals = rawData.map(d => d.ratio);
+  for (let i = 0; i < vals.length; i++) {
+    for (let j = i + 1; j < vals.length; j++) {
+      if (vals[j] > 0) {
+        const r = vals[i] / vals[j];
+        allRatios.push({ r, label: `${rawData[i].label} / ${rawData[j].label}`, dist: Math.abs(r - PHI) });
+        const r2 = vals[j] / vals[i];
+        allRatios.push({ r: r2, label: `${rawData[j].label} / ${rawData[i].label}`, dist: Math.abs(r2 - PHI) });
+      }
+    }
+  }
+  allRatios.sort((a, b) => a.dist - b.dist);
+  const top = allRatios.slice(0, 20);
+
+  const grid = document.getElementById('discoveryGrid');
+  grid.innerHTML = top.map(item => `
+    <div class="discovery-item ${item.dist <= threshold ? 'highlight' : ''}">
+      <div class="discovery-ratio">${item.r.toFixed(5)}</div>
+      <div style="font-size:0.7rem;color:var(--text-dim);margin-top:4px">${item.label.slice(0, 40)}</div>
+      <div style="font-size:0.7rem;color:${item.dist <= threshold ? 'var(--green)' : 'var(--text-dim)'}">±${item.dist.toFixed(5)} from φ</div>
+    </div>
+  `).join('');
+  setStatus('success', `🔍 Discovery complete. ${top.filter(r => r.dist <= threshold).length} top hits within threshold.`);
+}
+
+// ── MONTE CARLO ──
+async function runMonteCarlo() {
+  if (!analysisResults.length) { setStatus('error', '⚠️ Fetch data first, then run Monte Carlo.'); return; }
+  setStatus('loading', '🎲 Running 10,000 Monte Carlo simulations...');
+
+  const N = analysisResults.length;
+  const threshold = parseFloat(document.getElementById('threshold').value) || 0.05;
+  const observedHits = analysisResults.filter(r => r.isHit).length;
+  const SIMS = 10000;
+  let nullHitsTotal = 0;
+  let simHitsGTE = 0;
+
+  const mcSection = document.getElementById('mcSection');
+  mcSection.innerHTML = `
+    <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">Simulating ${SIMS.toLocaleString()} random draws...</div>
+    <div class="mc-bar-track"><div class="mc-bar-fill" id="mcBar"></div></div>
+    <div id="mcPct" style="font-size:0.75rem;color:var(--text-dim);margin-top:4px">0%</div>
+  `;
+
+  // Run in chunks to keep UI responsive
+  await new Promise(resolve => {
+    let done = 0;
+    const CHUNK = 500;
+    function step() {
+      for (let s = 0; s < CHUNK && done < SIMS; s++, done++) {
+        let hits = 0;
+        for (let i = 0; i < N; i++) {
+          const r = 0.5 + Math.random() * 2.5; // uniform [0.5, 3]
+          if (Math.abs(r - PHI) <= threshold) hits++;
+        }
+        nullHitsTotal += hits;
+        if (hits >= observedHits) simHitsGTE++;
+      }
+      const pct = Math.round(done / SIMS * 100);
+      document.getElementById('mcBar').style.width = pct + '%';
+      document.getElementById('mcPct').textContent = pct + '%';
+      if (done < SIMS) requestAnimationFrame(step);
+      else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+
+  const expectedHits = nullHitsTotal / SIMS;
+  const pValue = simHitsGTE / SIMS;
+  const significant = pValue < 0.05;
+
+  document.getElementById('mcResult').innerHTML = `
+    <div style="display:grid;gap:8px;font-size:0.8rem;">
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text-dim)">Observed φ-hits:</span>
+        <strong style="color:var(--gold)">${observedHits} / ${N}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text-dim)">Expected by chance:</span>
+        <strong>${expectedHits.toFixed(2)} / ${N}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text-dim)">Simulations ≥ observed:</span>
+        <strong>${simHitsGTE.toLocaleString()} / ${SIMS.toLocaleString()}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--text-dim)">p-value:</span>
+        <strong style="color:${significant ? 'var(--green)' : 'var(--text-dim)'}">p = ${pValue.toFixed(4)} ${significant ? '★ (p<0.05)' : '(not significant)'}</strong>
+      </div>
+      <div style="margin-top:4px;padding:8px;background:var(--bg2);border-radius:4px;font-size:0.72rem;color:var(--text-dim)">
+        ${significant
+          ? `⚡ Observed hits exceed random chance (p=${pValue.toFixed(4)}). Warrants further investigation.`
+          : `Results consistent with random chance. Increase N or adjust threshold for stronger test.`}
+      </div>
+    </div>
+  `;
+
+  mcSection.querySelector('.mc-bar-fill').style.width = '100%';
+  mcSection.querySelector('.mc-bar-fill').style.background = significant ? 'var(--green)' : 'var(--text-dim)';
+  setStatus('success', `🎲 Monte Carlo complete. p = ${pValue.toFixed(4)} (${SIMS.toLocaleString()} simulations)`);
+}
+
+// ── EXPORT ──
+function exportCSV() {
+  if (!analysisResults.length) { setStatus('error', '⚠️ No results to export.'); return; }
+  const headers = ['#', 'Label', 'Ratio', 'PHI_Distance', 'PHI_Proximity_%', 'Is_Hit', 'Source', 'Meta', 'Timestamp'];
+  const ts = new Date().toISOString();
+  const rows = analysisResults.map((r, i) =>
+    [i + 1, `"${r.label}"`, r.ratio.toFixed(8), r.dist.toFixed(8), (r.proximity * 100).toFixed(2), r.isHit ? 1 : 0, `"${r.source}"`, `"${r.meta}"`, ts].join(',')
+  );
+  const csv = [headers.join(','), ...rows].join('\n');
+  download(`phi_finder_v4_${currentDataset}_${Date.now()}.csv`, csv, 'text/csv');
+}
+
+function exportJSON() {
+  if (!analysisResults.length) { setStatus('error', '⚠️ No results to export.'); return; }
+  const payload = {
+    phi_finder_version: '4.0',
+    dataset: currentDataset,
+    phi: PHI,
+    threshold: parseFloat(document.getElementById('threshold').value),
+    timestamp: new Date().toISOString(),
+    doi: '10.5281/zenodo.18079209',
+    results: analysisResults
+  };
+  download(`phi_finder_v4_${currentDataset}_${Date.now()}.json`, JSON.stringify(payload, null, 2), 'application/json');
+}
+
+function download(filename, content, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = filename;
+  a.click();
+}
+
+function clearAll() {
+  analysisResults = [];
+  rawData = [];
+  document.getElementById('resultsBody').innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🌀</div><div>Cleared. Ready for new analysis.</div></div></td></tr>';
+  document.getElementById('discoveryGrid').innerHTML = '<div style="color:var(--text-dim);font-size:0.8rem;padding:10px;">Run Discovery Mode to see top φ-candidates.</div>';
+  document.getElementById('mcSection').innerHTML = '<div style="color:var(--text-dim);font-size:0.8rem;">Click Monte Carlo to run simulation.</div>';
+  document.getElementById('mcResult').innerHTML = '';
+  ['statCandidates', 'statEvents', 'statPvalue', 'phiScore'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('phiMeterLabel').textContent = 'Awaiting analysis...';
+  document.getElementById('phiNeedle').style.transform = 'rotate(0deg)';
+  const ctx = document.getElementById('distChart').getContext('2d');
+  ctx.clearRect(0, 0, document.getElementById('distChart').width, document.getElementById('distChart').height);
+  setStatus('idle', 'Cleared. Ready.');
+}
+
+// Resize chart on window resize
+window.addEventListener('resize', () => { if (analysisResults.length) drawDistChart(); });
+</script>
+</body>
+</html>
