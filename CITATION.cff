@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "φ-Finder: phi research app"
+version: 4.1.0
+date-released: 2026-10-31
+authors:
+  - family-names: Howell
+    given-names: Evan
+    affiliation: "Fore-Wave (independent)"
+license:
+  - MIT
+repository-code: "https://github.com/Fore-Wave/phi-finder"
+keywords:
+  - golden ratio
+  - open science
+  - data visualization
